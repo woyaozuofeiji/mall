@@ -1,0 +1,13 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="120" fill="url(#bg)"/>
+<circle cx="280" cy="220" r="170" fill="#BFDBFE" fill-opacity="0.45"/>
+<circle cx="940" cy="240" r="150" fill="#FEF3C7" fill-opacity="0.65"/>
+<path d="M320 620C320 530 390 460 480 460C515 460 548 471 574 491C612 440 669 410 734 410C850 410 944 504 944 620C944 736 850 830 734 830H480C390 830 320 760 320 670V620Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="18"/>
+<text x="90" y="1030" fill="#0F172A" font-family="Georgia, serif" font-size="88">Cloud Ceramic Tray</text>
+<defs>
+<linearGradient id="bg" x1="120" y1="100" x2="1080" y2="1090" gradientUnits="userSpaceOnUse">
+<stop stop-color="#EFF6FF"/>
+<stop offset="1" stop-color="#FFFBEB"/>
+</linearGradient>
+</defs>
+</svg>

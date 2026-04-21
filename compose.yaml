@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mall-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mall
+      POSTGRES_USER: mall
+      POSTGRES_PASSWORD: mall
+    ports:
+      - "54320:5432"
+    volumes:
+      - mall_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  mall_postgres_data:

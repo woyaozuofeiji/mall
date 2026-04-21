@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="120" fill="url(#bg)"/>
+<circle cx="270" cy="220" r="170" fill="#E9D5FF" fill-opacity="0.55"/>
+<circle cx="930" cy="270" r="160" fill="#FBCFE8" fill-opacity="0.55"/>
+<rect x="320" y="360" width="560" height="430" rx="40" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="18"/>
+<rect x="380" y="430" width="230" height="290" rx="28" fill="#EEF2FF"/>
+<rect x="650" y="430" width="170" height="70" rx="20" fill="#FEF3C7"/>
+<rect x="650" y="530" width="170" height="70" rx="20" fill="#FCE7F3"/>
+<rect x="650" y="630" width="170" height="70" rx="20" fill="#E0F2FE"/>
+<path d="M470 500L490 550H545L500 580L518 635L470 605L422 635L440 580L395 550H450L470 500Z" fill="#6366F1" fill-opacity="0.5"/>
+<text x="90" y="1030" fill="#0F172A" font-family="Georgia, serif" font-size="88">Star Note Gift Set</text>
+<defs>
+<linearGradient id="bg" x1="120" y1="100" x2="1080" y2="1090" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FAF5FF"/>
+<stop offset="1" stop-color="#F8FAFC"/>
+</linearGradient>
+</defs>
+</svg>

@@ -1,0 +1,8 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="120" fill="#F8FAFC"/>
+<rect x="250" y="280" width="700" height="640" rx="54" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="18"/>
+<rect x="320" y="350" width="560" height="300" rx="40" fill="#FFF7ED"/>
+<rect x="430" y="720" width="340" height="120" rx="32" fill="#FDF2F8" stroke="#FBCFE8" stroke-width="12"/>
+<path d="M600 420L628 484H698L642 526L664 594L600 552L536 594L558 526L502 484H572L600 420Z" fill="#D4AF37" fill-opacity="0.55"/>
+<text x="110" y="1080" fill="#0F172A" font-family="Georgia, serif" font-size="82">Jewelry Gift Packaging</text>
+</svg>

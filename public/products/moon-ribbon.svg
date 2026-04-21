@@ -1,0 +1,15 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="120" fill="url(#bg)"/>
+<circle cx="300" cy="240" r="180" fill="#FBCFE8" fill-opacity="0.55"/>
+<circle cx="930" cy="270" r="140" fill="#E9D5FF" fill-opacity="0.55"/>
+<path d="M250 630C420 450 780 450 950 630" stroke="#D8B4FE" stroke-width="44" stroke-linecap="round"/>
+<circle cx="600" cy="630" r="120" fill="#FFF1F2" stroke="#F9A8D4" stroke-width="24"/>
+<path d="M600 540L630 610L710 615L650 665L670 745L600 705L530 745L550 665L490 615L570 610L600 540Z" fill="#FB7185" fill-opacity="0.45"/>
+<text x="90" y="1030" fill="#0F172A" font-family="Georgia, serif" font-size="88">Moon Ribbon Bracelet</text>
+<defs>
+<linearGradient id="bg" x1="120" y1="100" x2="1080" y2="1090" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FDF2F8"/>
+<stop offset="1" stop-color="#F8FAFC"/>
+</linearGradient>
+</defs>
+</svg>

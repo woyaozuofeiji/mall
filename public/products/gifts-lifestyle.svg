@@ -1,0 +1,10 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="1200" rx="120" fill="#F8FAFC"/>
+<rect x="130" y="770" width="940" height="110" rx="28" fill="#E2E8F0"/>
+<rect x="210" y="250" width="330" height="520" rx="44" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="18"/>
+<rect x="620" y="330" width="360" height="270" rx="36" fill="#FFF7ED" stroke="#FDE68A" stroke-width="12"/>
+<rect x="660" y="400" width="280" height="26" rx="13" fill="#CBD5E1"/>
+<rect x="660" y="460" width="220" height="26" rx="13" fill="#E2E8F0"/>
+<circle cx="390" cy="560" r="100" fill="#BFDBFE" fill-opacity="0.55"/>
+<text x="110" y="1080" fill="#0F172A" font-family="Georgia, serif" font-size="82">Gift Lifestyle Scene</text>
+</svg>
