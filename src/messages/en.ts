@@ -16,6 +16,7 @@ export const en: SiteDictionary = {
   nav: {
     home: 'Home',
     shop: 'Shop',
+    guides: 'Guides',
     search: 'Search',
     cart: 'Cart',
     tracking: 'Track order',

@@ -1,13 +1,37 @@
+import type { Metadata } from "next";
 import { findOrderByLookup } from '@/lib/orders';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { getDictionary, isLocale } from '@/lib/i18n';
 import { getOrderStatusMeta, getOrderTimeline } from '@/lib/order-status';
+import { buildPageMetadata } from "@/lib/seo";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { StorefrontPageHero, StorefrontPanel } from '@/components/storefront/page-hero';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/order-tracking",
+    title: locale === "zh" ? "订单追踪" : "Order Tracking",
+    description:
+      locale === "zh"
+        ? "使用订单号与下单邮箱查看付款、履约与物流状态。"
+        : "Check payment, fulfillment and shipping status with your order number and purchase email.",
+    noIndex: true,
+  });
+}
 
 export default async function OrderTrackingPage({
   params,

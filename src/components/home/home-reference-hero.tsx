@@ -23,19 +23,22 @@ export function HomeReferenceHero({
           title: '毛绒朋友与闪耀小物',
           description: '把软萌玩偶、精致首饰和送礼灵感放在同一个温柔首页里，营造轻甜完整的线上精品店氛围。',
           cta: '立即选购',
+          highlights: ['精选上新', '礼物友好', '中英双语'],
         }
       : {
           eyebrow: 'Cute Finds, Precious Moments',
           title: 'Plush Friends & Sparkling Details',
           description: 'Bring plush toys, delicate jewelry and gift-ready finds into one soft, polished storefront for a complete boutique shopping feel.',
           cta: 'Shop Now',
+          highlights: ['Curated picks', 'Gift-ready', 'Bilingual store'],
         };
 
   return (
     <section className='pt-6 sm:pt-8'>
       <Container>
-        <div className='overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#fff8fa_0%,#ffeef2_44%,#fff7f8_100%)] shadow-[0_30px_90px_-60px_rgba(244,143,177,0.42)] ring-1 ring-[rgba(252,182,197,0.42)]'>
-          <div className='grid items-center gap-10 px-6 py-8 sm:px-8 lg:grid-cols-[0.44fr_0.56fr] lg:px-10 lg:py-10'>
+        <div className='relative overflow-hidden rounded-[2rem] border border-[rgba(252,182,197,0.28)] bg-white'>
+          <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,237,242,0.92),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,244,247,0.9),transparent_30%)]' />
+          <div className='relative grid items-center gap-10 px-6 py-8 sm:px-8 lg:grid-cols-[0.44fr_0.56fr] lg:px-10 lg:py-10'>
             <div className='space-y-6 lg:pl-6'>
               <p className='text-[13px] font-medium tracking-[0.02em] text-[#5e5a5e]'>{content.eyebrow}</p>
               <h1 className='max-w-md font-sans text-[2.8rem] font-semibold leading-[1.06] tracking-[-0.04em] text-[#2f2b32] sm:text-[4rem]'>
@@ -50,10 +53,15 @@ export function HomeReferenceHero({
                 {content.cta}
                 <ChevronRight className='ml-2 h-4 w-4' />
               </Link>
-              <div className='flex items-center gap-3 pt-4'>
-                <span className='h-1.5 w-6 rounded-full bg-[#ff7a8f]' />
-                <span className='h-1.5 w-10 rounded-full bg-[#ffbac7]' />
-                <span className='h-1.5 w-4 rounded-full bg-[#d3c8cd]' />
+              <div className='flex flex-wrap items-center gap-2 pt-2'>
+                {content.highlights.map((item) => (
+                  <span
+                    key={item}
+                    className='inline-flex items-center rounded-full border border-[rgba(255,186,199,0.5)] bg-white/80 px-3 py-1 text-[12px] font-medium tracking-[0.01em] text-[#6b6570]'
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
 

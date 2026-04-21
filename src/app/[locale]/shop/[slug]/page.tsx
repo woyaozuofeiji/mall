@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Star, Truck } from "lucide-react";
-import { getProductBySlug, getRelatedProducts } from "@/lib/catalog";
+import { getCategoryBySlug, getProductBySlug, getRelatedProducts } from "@/lib/catalog";
+import { getRelatedGuides } from "@/lib/guide-content";
 import { formatCurrency } from "@/lib/format";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
+import { buildPageMetadata, serializeJsonLd, truncateDescription } from "@/lib/seo";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductDetailTabs } from "@/components/shop/product-detail-tabs";
@@ -13,6 +18,54 @@ import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
+
+const getProductBySlugCached = cache(getProductBySlug);
+
+function getSchemaAvailability(value?: string) {
+  if (!value) {
+    return "https://schema.org/InStock";
+  }
+
+  return /out\s*of\s*stock|sold\s*out|unavailable/i.test(value)
+    ? "https://schema.org/OutOfStock"
+    : "https://schema.org/InStock";
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  const product = await getProductBySlugCached(slug);
+  if (!product) {
+    return buildPageMetadata({
+      locale,
+      path: `/shop/${slug}`,
+      title: locale === "zh" ? "商品不存在" : "Product not found",
+      description: locale === "zh" ? "未找到对应商品。" : "The requested product could not be found.",
+      noIndex: true,
+    });
+  }
+
+  const description = truncateDescription(
+    [t(locale, product.subtitle), t(locale, product.description)].filter(Boolean).join(" "),
+  );
+
+  return buildPageMetadata({
+    locale,
+    path: `/shop/${product.slug}`,
+    title: t(locale, product.name),
+    description,
+    images: product.images.map((image) => image.url),
+    keywords: [t(locale, product.name), product.categorySlug, ...product.tags.slice(0, 6)],
+    type: "article",
+  });
+}
 
 export default async function ProductDetailPage({
   params,
@@ -24,21 +77,94 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlugCached(slug);
   if (!product) {
     notFound();
   }
 
   const dictionary = getDictionary(locale);
-  const related = await getRelatedProducts({
-    categorySlug: product.categorySlug,
-    excludeProductId: product.id,
-    take: 3,
-  });
+  const [related, category] = await Promise.all([
+    getRelatedProducts({
+      categorySlug: product.categorySlug,
+      excludeProductId: product.id,
+      take: 3,
+    }),
+    getCategoryBySlug(product.categorySlug),
+  ]);
+  const relatedGuides = getRelatedGuides(product.categorySlug as "plush" | "jewelry" | "gifts", locale).slice(0, 2);
   const heroSpecs = product.specs.slice(0, 3);
+  const productUrl = absoluteUrl(`/${locale}/shop/${product.slug}`);
+  const productDescription = truncateDescription(
+    [t(locale, product.subtitle), t(locale, product.description)].filter(Boolean).join(" "),
+  );
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: dictionary.nav.home,
+            item: absoluteUrl(`/${locale}`),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: dictionary.nav.shop,
+            item: absoluteUrl(`/${locale}/shop`),
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: category ? t(locale, category.name) : product.categorySlug,
+            item: absoluteUrl(`/${locale}/shop/category/${product.categorySlug}`),
+          },
+          {
+            "@type": "ListItem",
+            position: 4,
+            name: t(locale, product.name),
+            item: productUrl,
+          },
+        ],
+      },
+      {
+        "@type": "Product",
+        name: t(locale, product.name),
+        description: productDescription,
+        sku: product.sku ?? product.slug,
+        category: product.categorySlug,
+        url: productUrl,
+        brand: {
+          "@type": "Brand",
+          name: SITE_NAME,
+        },
+        image: product.images.map((image) => absoluteUrl(image.url)),
+        offers: {
+          "@type": "Offer",
+          url: productUrl,
+          priceCurrency: "USD",
+          price: product.price.toFixed(2),
+          availability: getSchemaAvailability(product.availability ? t(locale, product.availability) : undefined),
+          itemCondition: "https://schema.org/NewCondition",
+        },
+        ...(product.reviewSummary
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: product.reviewSummary.rating.toFixed(1),
+                reviewCount: product.reviewSummary.count,
+              },
+            }
+          : {}),
+      },
+    ],
+  };
 
   return (
     <div className="space-y-10 pb-16 pt-8 sm:space-y-12 sm:pb-20 sm:pt-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }} />
       <Container className="space-y-8 sm:space-y-10">
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-[#8f8791]">
           <Link href={`/${locale}`} className="transition hover:text-[#ff6d88]">
@@ -47,6 +173,10 @@ export default async function ProductDetailPage({
           <span>/</span>
           <Link href={`/${locale}/shop`} className="transition hover:text-[#ff6d88]">
             {dictionary.nav.shop}
+          </Link>
+          <span>/</span>
+          <Link href={`/${locale}/shop/category/${product.categorySlug}`} className="transition hover:text-[#ff6d88]">
+            {category ? t(locale, category.name) : product.categorySlug}
           </Link>
           <span>/</span>
           <span className="text-[#4d4650]">{t(locale, product.name)}</span>
@@ -59,7 +189,9 @@ export default async function ProductDetailPage({
 
           <StorefrontPanel className="space-y-5 p-5 lg:sticky lg:top-28 lg:h-fit sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{product.categorySlug}</Badge>
+              <Link href={`/${locale}/shop/category/${product.categorySlug}`} className="transition hover:-translate-y-0.5">
+                <Badge>{category ? t(locale, category.name) : product.categorySlug}</Badge>
+              </Link>
               {product.featured ? <Badge className="border-transparent bg-[linear-gradient(90deg,#ff8aa1_0%,#ff6d88_100%)] text-white">{locale === "zh" ? "热销" : "Bestseller"}</Badge> : null}
               {product.isNew ? <Badge className="bg-[#fff3f6] text-[#ff6d88]">{locale === "zh" ? "新品" : "New"}</Badge> : null}
               <span className="inline-flex items-center rounded-full bg-[#fff8fa] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f8791] ring-1 ring-[rgba(241,225,230,0.95)]">
@@ -151,27 +283,67 @@ export default async function ProductDetailPage({
 
         <section id="product-content" className="scroll-mt-32 space-y-8">
           <div className="space-y-4">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">Product information</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+              {locale === "zh" ? "商品信息" : "Product information"}
+            </p>
             <h2 className="text-[2.4rem] font-semibold tracking-[-0.04em] text-[#2f2b32] sm:text-[3rem]">
-              {locale === "zh" ? "更完整的商品内容区" : "A fuller product content area"}
+              {locale === "zh" ? "材质、尺寸与送礼信息" : "Materials, sizing and gifting details"}
             </h2>
             <p className="max-w-3xl text-sm leading-8 text-[#6d6670]">
               {locale === "zh"
-                ? "详情页会继续承接首页的柔和精品店调性，把描述、参数、配送和评价拆成更清晰的层级。"
-                : "The product page continues the homepage’s soft boutique direction while separating description, details, shipping and reviews into clearer layers."}
+                ? "在这里重点查看商品材质、尺寸、包装、配送说明和购买前需要确认的信息，帮助用户在下单前快速判断是否适合作为自用或送礼。"
+                : "Use this section to review material notes, dimensions, packaging, shipping guidance and the key details customers usually check before buying for themselves or as a gift."}
             </p>
           </div>
           <ProductDetailTabs product={product} locale={locale} />
         </section>
 
+        {relatedGuides.length > 0 ? (
+          <section className="space-y-8 border-t border-[rgba(241,225,230,0.95)] pt-12">
+            <div className="max-w-2xl">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+                {locale === "zh" ? "相关指南" : "Related guides"}
+              </p>
+              <h2 className="mt-4 text-[2.2rem] font-semibold tracking-[-0.04em] text-[#2f2b32] sm:text-[2.7rem]">
+                {locale === "zh" ? "先了解，再决定是否购买" : "Read first, then decide what to buy"}
+              </h2>
+              <p className="mt-4 text-sm leading-8 text-[#6d6670]">
+                {locale === "zh"
+                  ? "如果你还在比较材质、送礼场景或搭配方式，可以先看相关指南，再返回商品页做最终选择。"
+                  : "If you are still comparing materials, gifting use cases or bundle ideas, these guides can help before you make the final buying decision."}
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {relatedGuides.map((guide) => (
+                <Link
+                  key={guide.slug}
+                  href={`/${locale}/guides/${guide.slug}`}
+                  className="rounded-[1.5rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-5 ring-1 ring-[rgba(241,225,230,0.95)] transition hover:-translate-y-0.5"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <StorefrontInfoPill>{guide.category}</StorefrontInfoPill>
+                    <StorefrontInfoPill className="bg-white">
+                      {locale === "zh" ? `${guide.readingMinutes} 分钟阅读` : `${guide.readingMinutes} min read`}
+                    </StorefrontInfoPill>
+                  </div>
+                  <h3 className="mt-4 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{guide.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#6d6670]">{guide.description}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className="space-y-8 border-t border-[rgba(241,225,230,0.95)] pt-12">
           <div className="max-w-2xl">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">Related editing</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+              {locale === "zh" ? "相关推荐" : "Related products"}
+            </p>
             <h2 className="mt-4 text-[2.4rem] font-semibold tracking-[-0.04em] text-[#2f2b32] sm:text-[3rem]">{dictionary.shop.relatedProducts}</h2>
             <p className="mt-4 text-sm leading-8 text-[#6d6670]">
               {locale === "zh"
-                ? "关联商品继续保持首页和列表页的同一套卡片系统，让浏览体验更完整。"
-                : "Related products use the same card language as the homepage and collection page to keep the browsing flow visually consistent."}
+                ? "如果你正在比较同类商品，这里可以继续查看相近材质、价位或送礼场景的商品，帮助提升搭配购买和加购效率。"
+                : "If you are comparing similar items, this section helps you review related products with comparable materials, pricing or gifting use cases for easier bundle and add-on decisions."}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

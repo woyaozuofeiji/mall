@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -7,22 +6,6 @@ import { getDictionary, isLocale, locales } from "@/lib/i18n";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) {
-    return {};
-  }
-  const dictionary = getDictionary(locale);
-  return {
-    title: dictionary.common.brand,
-    description: dictionary.hero.description,
-  };
 }
 
 export default async function LocaleLayout({
@@ -42,7 +25,7 @@ export default async function LocaleLayout({
 
   return (
     <CartProvider>
-      <div className="min-h-screen">
+      <div lang={locale === "zh" ? "zh-CN" : "en"} className="min-h-screen">
         <SiteHeader locale={locale} dictionary={{ brand: dictionary.common.brand, nav: dictionary.nav }} />
         <main>{children}</main>
         <SiteFooter locale={locale} />

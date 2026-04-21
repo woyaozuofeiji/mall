@@ -57,7 +57,7 @@ export function CategoryGrid({ categories, locale }: { categories: Category[]; l
         return (
           <Link
             key={category.id}
-            href={`/${locale}/shop?category=${category.slug}`}
+            href={`/${locale}/shop/category/${category.slug}`}
             className={cn(
               "group relative overflow-hidden rounded-[2.45rem] border border-[rgba(59,47,37,0.08)] shadow-[0_36px_96px_-60px_rgba(33,25,20,0.5)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_46px_104px_-54px_rgba(33,25,20,0.56)]",
               meta?.surface ?? "bg-white/80",

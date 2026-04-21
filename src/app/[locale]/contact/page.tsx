@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { Mail, MessageCircleMore, PackageSearch } from 'lucide-react';
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { buildPageMetadata } from "@/lib/seo";
 import { Container } from '@/components/ui/container';
 import { StorefrontPageHero, StorefrontPanel } from '@/components/storefront/page-hero';
 
@@ -46,6 +48,31 @@ const contactCards = {
   ],
 } as const;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/contact",
+    title: locale === "zh" ? "联系我们与客户支持" : "Contact & Customer Support",
+    description:
+      locale === "zh"
+        ? "联系客户支持、社媒账号与供应链协同入口，处理订单、配送和商品咨询。"
+        : "Reach customer care, social channels and supplier coordination contacts for order, shipping and product questions.",
+    keywords:
+      locale === "zh"
+        ? ["联系我们", "客户支持", "订单咨询", "配送问题"]
+        : ["contact", "customer support", "shipping questions", "order support"],
+  });
+}
+
 export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) {
@@ -61,11 +88,13 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
         description={dictionary.content.contactDescription}
         side={
           <div className='space-y-3 text-[#6b6470]'>
-            <p className='text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]'>Brand touchpoints</p>
+            <p className='text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]'>
+              {locale === "zh" ? "联系渠道" : "Contact channels"}
+            </p>
             <p className='text-sm leading-7'>
               {locale === 'zh'
-                ? '联系页面延续首页的同一套品牌配色与卡片语言，让服务信息更完整、更可信。'
-                : 'The contact page keeps the same palette and card language as the homepage so support details feel complete and trustworthy.'}
+                ? '如果需要咨询订单、配送、商品细节或供应链协同，可以从这里快速找到对应联系入口。'
+                : 'Use these contact routes for order questions, shipping follow-up, product inquiries or supplier coordination.'}
             </p>
           </div>
         }

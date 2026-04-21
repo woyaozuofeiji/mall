@@ -1,5 +1,28 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { buildPageMetadata } from "@/lib/seo";
 import { PolicyTemplate } from '@/components/storefront/policy-template';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/policies/shipping",
+    title: locale === "zh" ? "配送政策" : "Shipping Policy",
+    description:
+      locale === "zh"
+        ? "查看备货时间、配送地区、运单更新方式以及影响签收时效的常见因素。"
+        : "See handling times, supported delivery regions, shipment updates and factors that may affect delivery windows.",
+  });
+}
 
 export default async function ShippingPolicyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -12,8 +35,8 @@ export default async function ShippingPolicyPage({ params }: { params: Promise<{
       title={locale === 'zh' ? '配送政策' : 'Shipping Policy'}
       intro={
         locale === 'zh'
-          ? '配送页会承接首页里提到的包邮、时效和服务承诺，让用户更安心地下单。'
-          : 'The shipping page extends the promises made on the homepage around delivery timing, order handling and support expectations.'
+          ? '这里会说明备货时间、配送区域、物流更新方式以及可能影响签收时效的常见因素。'
+          : 'This page explains handling time, delivery regions, shipment updates and the common factors that may affect arrival windows.'
       }
       points={
         locale === 'zh'

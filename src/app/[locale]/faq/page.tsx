@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { Container } from '@/components/ui/container';
 import { StorefrontPageHero, StorefrontPanel } from '@/components/storefront/page-hero';
 
@@ -45,26 +47,63 @@ const faqs = {
   ],
 } as const;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/faq",
+    title: locale === "zh" ? "常见问题与购物帮助" : "FAQ & Shopping Help",
+    description:
+      locale === "zh"
+        ? "查看支付方式、发货、订单状态与送礼购物相关的常见问题。"
+        : "Read answers about payment, shipping, order status and gifting support before you place an order.",
+    keywords: locale === "zh" ? ["常见问题", "支付方式", "配送", "订单状态"] : ["FAQ", "payment methods", "shipping", "order status"],
+  });
+}
+
 export default async function FaqPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) {
     return null;
   }
   const dictionary = getDictionary(locale);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs[locale].map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
 
   return (
     <div className='space-y-10 pb-16 sm:space-y-12 sm:pb-20'>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }} />
       <StorefrontPageHero
         eyebrow='FAQ'
         title={dictionary.content.faqTitle}
         description={dictionary.content.faqDescription}
         side={
           <div className='space-y-3 text-[#6b6470]'>
-            <p className='text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]'>Service notes</p>
+            <p className='text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]'>
+              {locale === "zh" ? "服务说明" : "Service notes"}
+            </p>
             <p className='text-sm leading-7'>
               {locale === 'zh'
-                ? 'FAQ 页面也保持和首页一致的柔和礼品店氛围，让帮助信息像品牌服务的一部分。'
-                : 'The FAQ page keeps the same soft boutique tone as the homepage, so practical information still feels like part of the brand experience.'}
+                ? '这里集中回答支付方式、发货时效、订单状态和精选商品策略等高频问题，帮助用户在下单前减少疑问。'
+                : 'This page answers common questions about payment, delivery timing, order status and the store’s curated assortment so shoppers can buy with fewer uncertainties.'}
             </p>
           </div>
         }

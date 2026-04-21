@@ -14,6 +14,7 @@ interface SiteHeaderProps {
     nav: {
       home: string;
       shop: string;
+      guides: string;
       search: string;
       cart: string;
       tracking: string;
@@ -33,6 +34,7 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
     () => [
       { href: `/${locale}`, label: dictionary.nav.home },
       { href: `/${locale}/shop`, label: dictionary.nav.shop },
+      { href: `/${locale}/guides`, label: dictionary.nav.guides },
       { href: `/${locale}/search`, label: dictionary.nav.search },
       { href: `/${locale}/order-tracking`, label: dictionary.nav.tracking },
       { href: `/${locale}/faq`, label: dictionary.nav.faq },

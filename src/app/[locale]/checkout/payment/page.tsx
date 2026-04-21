@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Link from 'next/link';
 import { findOrderByLookup } from '@/lib/orders';
 import { formatDateTime } from '@/lib/format';
 import { getDictionary, isLocale } from '@/lib/i18n';
 import { getOrderStatusMeta } from '@/lib/order-status';
+import { buildPageMetadata } from "@/lib/seo";
 import { PaymentExperience, type PaymentMethod } from '@/components/checkout/payment-experience';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
@@ -10,6 +12,28 @@ import { StorefrontPanel, StorefrontPageHero } from '@/components/storefront/pag
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/checkout/payment",
+    title: locale === "zh" ? "完成付款" : "Complete Payment",
+    description:
+      locale === "zh"
+        ? "为当前订单完成付款并进入确认流程。"
+        : "Complete payment for your current order and move it into confirmation.",
+    noIndex: true,
+  });
+}
 
 export default async function CheckoutPaymentPage({
   params,

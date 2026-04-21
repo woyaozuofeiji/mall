@@ -1,11 +1,32 @@
+import type { Metadata } from "next";
 import { getSearchProducts } from "@/lib/catalog";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { buildPageMetadata } from "@/lib/seo";
 import { ProductCard } from "@/components/shop/product-card";
 import { StorefrontPageHero, StorefrontPanel } from "@/components/storefront/page-hero";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/search",
+    title: locale === "zh" ? "搜索商品" : "Search Products",
+    description: locale === "zh" ? "按关键词查找商品。" : "Search the catalog by keyword.",
+    noIndex: true,
+  });
+}
 
 export default async function SearchPage({
   params,

@@ -73,6 +73,7 @@ export interface SiteDictionary {
   nav: {
     home: string;
     shop: string;
+    guides: string;
     search: string;
     cart: string;
     tracking: string;

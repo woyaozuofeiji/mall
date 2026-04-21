@@ -14,11 +14,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           about: "关于我们",
           accept: "支持方式",
           shopLinks: [
-            { href: `/${locale}/shop?category=plush`, label: "毛绒玩具" },
-            { href: `/${locale}/shop?category=jewelry`, label: "饰品首饰" },
+            { href: `/${locale}/shop/category/plush`, label: "毛绒玩具" },
+            { href: `/${locale}/shop/category/jewelry`, label: "饰品首饰" },
             { href: `/${locale}/shop?sort=newest`, label: "新品上架" },
             { href: `/${locale}/shop`, label: "热销推荐" },
-            { href: `/${locale}/shop?category=gifts`, label: "送礼灵感" },
+            { href: `/${locale}/shop/category/gifts`, label: "送礼灵感" },
           ],
           customerLinks: [
             { href: `/${locale}/contact`, label: "联系我们" },
@@ -29,6 +29,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           ],
           aboutLinks: [
             { href: `/${locale}/contact`, label: "品牌故事" },
+            { href: `/${locale}/guides`, label: "选购指南" },
             { href: `/admin`, label: "后台入口" },
             { href: `/${locale}/policies/privacy`, label: "隐私政策" },
             { href: `/${locale}/policies/terms`, label: "服务条款" },
@@ -48,11 +49,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           about: "About Us",
           accept: "We Accept",
           shopLinks: [
-            { href: `/${locale}/shop?category=plush`, label: "Plush Toys" },
-            { href: `/${locale}/shop?category=jewelry`, label: "Jewelry" },
+            { href: `/${locale}/shop/category/plush`, label: "Plush Toys" },
+            { href: `/${locale}/shop/category/jewelry`, label: "Jewelry" },
             { href: `/${locale}/shop?sort=newest`, label: "New Arrivals" },
             { href: `/${locale}/shop`, label: "Best Sellers" },
-            { href: `/${locale}/shop?category=gifts`, label: "Gift Ideas" },
+            { href: `/${locale}/shop/category/gifts`, label: "Gift Ideas" },
           ],
           customerLinks: [
             { href: `/${locale}/contact`, label: "Contact Us" },
@@ -63,6 +64,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           ],
           aboutLinks: [
             { href: `/${locale}/contact`, label: "Our Story" },
+            { href: `/${locale}/guides`, label: "Buying Guides" },
             { href: `/admin`, label: "Admin" },
             { href: `/${locale}/policies/privacy`, label: "Privacy Policy" },
             { href: `/${locale}/policies/terms`, label: "Terms of Service" },

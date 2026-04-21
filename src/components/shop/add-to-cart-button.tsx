@@ -36,7 +36,7 @@ export function AddToCartButton({
           quantity: "数量",
           decreaseQuantity: "减少数量",
           increaseQuantity: "增加数量",
-          instant: "保持和首页一致的轻柔礼品店购买节奏",
+          instant: "选择规格与数量后可立即加入购物车，继续结算或组合购买。",
         }
       : {
           heading: "Quick buy",
@@ -46,7 +46,7 @@ export function AddToCartButton({
           quantity: "Quantity",
           decreaseQuantity: "Decrease quantity",
           increaseQuantity: "Increase quantity",
-          instant: "Keep the same soft boutique buying rhythm as the homepage",
+          instant: "Select a variant and quantity, then add the item to cart for checkout or bundle purchases.",
         };
 
   const addSelectedQuantity = () => {

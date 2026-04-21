@@ -1,14 +1,38 @@
+import type { Metadata } from "next";
 import Link from 'next/link';
 import { findOrderByLookup } from '@/lib/orders';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { getDictionary, isLocale } from '@/lib/i18n';
 import { getOrderStatusMeta, getOrderTimeline } from '@/lib/order-status';
+import { buildPageMetadata } from "@/lib/seo";
 import { Container } from '@/components/ui/container';
 import { Button } from '@/components/ui/button';
 import { StorefrontPanel, StorefrontPageHero } from '@/components/storefront/page-hero';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/checkout/success",
+    title: locale === "zh" ? "订单付款成功" : "Payment Successful",
+    description:
+      locale === "zh"
+        ? "查看订单回执、付款方式与后续履约进度。"
+        : "Review your order receipt, payment method and next fulfillment steps.",
+    noIndex: true,
+  });
+}
 
 export default async function CheckoutSuccessPage({
   params,

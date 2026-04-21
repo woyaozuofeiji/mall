@@ -1,11 +1,46 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { getShopProducts } from "@/lib/catalog";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
+import { buildPageMetadata } from "@/lib/seo";
 import { ProductCard } from "@/components/shop/product-card";
 import { StorefrontPageHero, StorefrontPanel, StorefrontInfoPill } from "@/components/storefront/page-hero";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ category?: string; sort?: "featured" | "newest" | "price_low" | "price_high"; q?: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const query = await searchParams;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  const noIndex = Boolean(query.category || query.sort || query.q?.trim());
+
+  return buildPageMetadata({
+    locale,
+    path: "/shop",
+    noIndex,
+    title: locale === "zh" ? "选购毛绒玩偶、饰品与送礼好物" : "Shop Curated Plush Toys, Jewelry & Gifts",
+    description:
+      locale === "zh"
+        ? "浏览 Northstar Atelier 的精选商品系列，涵盖毛绒玩偶、礼物饰品与轻礼品好物。"
+        : "Browse Northstar Atelier's curated collection of plush toys, gift-ready jewelry and boutique accessories.",
+    keywords:
+      locale === "zh"
+        ? ["毛绒玩偶", "礼物", "饰品", "礼品商店", "商品列表"]
+        : ["shop gifts", "plush toys", "jewelry", "gift ideas", "boutique accessories"],
+  });
+}
 
 export default async function ShopPage({
   params,
@@ -20,6 +55,11 @@ export default async function ShopPage({
     return null;
   }
   const dictionary = getDictionary(locale);
+
+  if (query.category && query.category !== "all" && !query.q?.trim() && (!query.sort || query.sort === "featured")) {
+    redirect(`/${locale}/shop/category/${query.category}`);
+  }
+
   const { categories, products } = await getShopProducts({
     category: query.category,
     sort: query.sort,
@@ -34,12 +74,21 @@ export default async function ShopPage({
         description={dictionary.shop.description}
         side={
           <div className="space-y-4 text-[#6b6470]">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">Collection note</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">
+              {locale === "zh" ? "选购范围" : "Collection scope"}
+            </p>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? `当前共有 ${products.length} 个商品结果。列表页会继续保持首页这种柔和、甜美、礼品精品店的浏览氛围。`
-                : `${products.length} curated products are currently visible. The collection page continues the same soft, gift-led boutique atmosphere as the homepage.`}
+                ? `当前共有 ${products.length} 个精选商品，覆盖毛绒玩偶、首饰配饰和桌面礼品，适合送礼、加购和跨境轻小件发货场景。`
+                : `${products.length} curated products are currently visible across plush toys, jewelry and compact gift items for gifting, add-on purchases and lightweight international shipping.`}
             </p>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <StorefrontInfoPill key={category.id} className="bg-white">
+                  <Link href={`/${locale}/shop/category/${category.slug}`}>{t(locale, category.name)}</Link>
+                </StorefrontInfoPill>
+              ))}
+            </div>
           </div>
         }
       />

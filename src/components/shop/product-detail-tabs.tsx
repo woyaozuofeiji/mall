@@ -16,14 +16,14 @@ export function ProductDetailTabs({ product, locale }: { product: Product; local
     const mockReviews =
       locale === "zh"
         ? [
-            { name: "Lina", rating: 5, date: "2026-04-14", text: "现在这个详情页风格和首页一致了，浏览体验会更完整、更像礼品精品店。" },
-            { name: "Mason", rating: 5, date: "2026-04-09", text: "图集、购买区和说明区的衔接更自然，不会像以前那样突然跳风格。" },
-            { name: "Evelyn", rating: 4, date: "2026-03-28", text: "整体已经很接近轻柔、甜美的礼品电商详情页体验。" },
+            { name: "Lina", rating: 5, date: "2026-04-14", text: "包装很适合送礼，毛绒手感也不错，收到后直接作为生日礼物送出。" },
+            { name: "Mason", rating: 5, date: "2026-04-09", text: "尺寸说明和图片参考比较清楚，下单前就能判断是否适合桌面陈列。" },
+            { name: "Evelyn", rating: 4, date: "2026-03-28", text: "物流更新及时，商品和页面描述基本一致，适合作为轻礼物购买。" },
           ]
         : [
-            { name: "Lina", rating: 5, date: "2026-04-14", text: "The PDP now feels visually aligned with the homepage, which makes the full browsing flow feel more complete." },
-            { name: "Mason", rating: 5, date: "2026-04-09", text: "The gallery, buying panel and description area now transition much more naturally without a sudden style shift." },
-            { name: "Evelyn", rating: 4, date: "2026-03-28", text: "Overall this feels much closer to a soft, gift-led product page experience." },
+            { name: "Lina", rating: 5, date: "2026-04-14", text: "The packaging felt gift-ready and the plush texture was soft enough to send straight as a birthday present." },
+            { name: "Mason", rating: 5, date: "2026-04-09", text: "The sizing notes and gallery made it easy to judge whether this would work for desk display before ordering." },
+            { name: "Evelyn", rating: 4, date: "2026-03-28", text: "Shipping updates were clear and the item matched the product description well for a small gift purchase." },
           ];
 
     return [

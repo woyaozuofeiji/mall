@@ -1,5 +1,28 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { buildPageMetadata } from "@/lib/seo";
 import { PolicyTemplate } from "@/components/storefront/policy-template";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/policies/returns",
+    title: locale === "zh" ? "退换与退款政策" : "Return & Refund Policy",
+    description:
+      locale === "zh"
+        ? "查看退货、换货、退款资格条件、反馈时效与售后处理说明。"
+        : "Review eligibility, response timing and refund handling for returns, replacements and after-sales support.",
+  });
+}
 
 export default async function ReturnsPolicyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

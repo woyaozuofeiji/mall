@@ -1,5 +1,28 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { buildPageMetadata } from "@/lib/seo";
 import { PolicyTemplate } from '@/components/storefront/policy-template';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/policies/privacy",
+    title: locale === "zh" ? "隐私政策" : "Privacy Policy",
+    description:
+      locale === "zh"
+        ? "了解站点如何收集、使用和管理客户资料，用于下单、客服沟通与物流履约。"
+        : "Learn how customer data is collected, used and managed for checkout, support and order fulfillment.",
+  });
+}
 
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

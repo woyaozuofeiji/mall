@@ -1,5 +1,28 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { buildPageMetadata } from "@/lib/seo";
 import { PolicyTemplate } from '@/components/storefront/policy-template';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/policies/terms",
+    title: locale === "zh" ? "服务条款" : "Terms of Service",
+    description:
+      locale === "zh"
+        ? "阅读订单成立、支付、履约、取消申请与售后责任相关服务条款。"
+        : "Read the terms covering order acceptance, payment, fulfillment, cancellations and after-sales responsibilities.",
+  });
+}
 
 export default async function TermsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

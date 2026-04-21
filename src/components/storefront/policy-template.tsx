@@ -21,11 +21,13 @@ export function PolicyTemplate({
         description={intro}
         side={
           <div className="space-y-3 text-[#6b6470]">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">Store standard</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">
+              {locale === "zh" ? "规则摘要" : "Policy summary"}
+            </p>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? "政策页也会统一成首页这套粉白礼品店风格，让说明内容看起来更完整、更可信。"
-                : "Policy pages also follow the homepage’s soft boutique styling so practical expectations still feel polished and consistent."}
+                ? "这些政策用于说明订单处理、发货、售后和数据使用规则，帮助用户在购买前明确服务边界。"
+                : "These policy pages explain order handling, shipping, after-sales support and data usage so customers can understand store expectations before purchasing."}
             </p>
           </div>
         }

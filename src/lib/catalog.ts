@@ -206,6 +206,18 @@ export async function getCatalogCategories() {
   return records.map(mapCategory);
 }
 
+export async function getCategoryBySlug(slug: string) {
+  const record = await prisma.category.findUnique({
+    where: { slug },
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  return mapCategory(record);
+}
+
 export async function getHomepageProducts() {
   const [featured, latest] = await Promise.all([
     prisma.product.findMany({
@@ -256,6 +268,25 @@ export async function getProductBySlug(slug: string) {
   }
 
   return mapProduct(record);
+}
+
+export async function getProductsBySlugs(slugs: string[]) {
+  if (slugs.length === 0) {
+    return [];
+  }
+
+  const records = await prisma.product.findMany({
+    where: {
+      status: "PUBLISHED",
+      slug: {
+        in: slugs,
+      },
+    },
+    include: productWithRelations.include,
+  });
+
+  const mapped = new Map(records.map((record) => [record.slug, mapProduct(record)]));
+  return slugs.map((slug) => mapped.get(slug)).filter((product): product is Product => Boolean(product));
 }
 
 export async function getRelatedProducts(input: { categorySlug: string; excludeProductId: string; take?: number }) {

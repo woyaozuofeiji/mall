@@ -1,7 +1,28 @@
+import type { Metadata } from "next";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { buildPageMetadata } from "@/lib/seo";
 import { CartClient } from "@/components/cart/cart-client";
 import { Container } from "@/components/ui/container";
 import { StorefrontPageHero } from "@/components/storefront/page-hero";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) {
+    return {};
+  }
+
+  return buildPageMetadata({
+    locale,
+    path: "/cart",
+    title: locale === "zh" ? "购物车" : "Shopping Cart",
+    description: locale === "zh" ? "查看购物车中的商品并继续结算。" : "Review the items in your cart and continue to checkout.",
+    noIndex: true,
+  });
+}
 
 export default async function CartPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

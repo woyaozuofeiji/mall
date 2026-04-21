@@ -16,6 +16,7 @@ export const zh: SiteDictionary = {
   nav: {
     home: '首页',
     shop: '商品',
+    guides: '指南',
     search: '搜索',
     cart: '购物车',
     tracking: '订单查询',
