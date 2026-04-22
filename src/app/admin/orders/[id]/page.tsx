@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { formatCurrency } from "@/lib/format";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { OrderUpdateForm } from "@/components/admin/order-update-form";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminOrderById } from "@/lib/orders";
 
@@ -17,6 +18,7 @@ export default async function AdminOrderDetailPage({
   const [{ id }, { locale: localeValue }] = await Promise.all([params, searchParams]);
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: `/admin/orders/${id}` });
   const order = await getAdminOrderById(id);
 
   if (!order) {
@@ -30,6 +32,7 @@ export default async function AdminOrderDetailPage({
       locale={locale}
       dictionary={dictionary}
       currentPath={`/admin/orders/${id}`}
+      admin={admin}
     >
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">

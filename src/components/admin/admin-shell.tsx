@@ -1,5 +1,7 @@
+import { logoutAdminAction } from "@/app/admin/actions";
 import Link from "next/link";
 import { LayoutDashboard, Package, FileDown, ClipboardList, Files, Settings } from "lucide-react";
+import type { AuthenticatedAdmin } from "@/lib/admin-auth";
 import type { Locale } from "@/lib/types";
 import { adminHref, type AdminDictionary } from "@/lib/admin-i18n";
 
@@ -10,6 +12,7 @@ export function AdminShell({
   locale,
   dictionary,
   currentPath,
+  admin,
 }: {
   title: string;
   description: string;
@@ -17,6 +20,7 @@ export function AdminShell({
   locale: Locale;
   dictionary: AdminDictionary;
   currentPath: string;
+  admin: AuthenticatedAdmin;
 }) {
   const items = [
     { href: "/admin", label: dictionary.nav.dashboard, icon: LayoutDashboard },
@@ -82,8 +86,28 @@ export function AdminShell({
 
         <main className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="mb-8 border-b border-white/10 pb-6">
-            <h1 className="font-serif text-4xl">{title}</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/70">{description}</p>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="font-serif text-4xl">{title}</h1>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-white/70">{description}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 sm:min-w-[16rem]">
+                <p className="text-xs uppercase tracking-[0.2em] text-white/45">
+                  {locale === "zh" ? "当前登录" : "Signed in as"}
+                </p>
+                <p className="mt-2 text-sm font-medium text-white">{admin.displayName ?? admin.email}</p>
+                <p className="mt-1 text-xs text-white/40">{admin.email}</p>
+                <form action={logoutAdminAction} className="mt-4">
+                  <input type="hidden" name="locale" value={locale} />
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-white/10 px-4 text-sm text-white transition hover:bg-white/15"
+                  >
+                    {locale === "zh" ? "退出登录" : "Sign out"}
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
           {children}
         </main>

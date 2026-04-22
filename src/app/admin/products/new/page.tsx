@@ -1,5 +1,6 @@
 import { AdminProductForm, type AdminProductFormValues } from "@/components/admin/product-form";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminProductFormMeta } from "@/lib/admin";
 
@@ -36,6 +37,7 @@ export default async function AdminNewProductPage({ searchParams }: { searchPara
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: "/admin/products/new" });
   const meta = await getAdminProductFormMeta();
 
   return (
@@ -45,6 +47,7 @@ export default async function AdminNewProductPage({ searchParams }: { searchPara
       locale={locale}
       dictionary={dictionary}
       currentPath="/admin/products/new"
+      admin={admin}
     >
       <AdminProductForm
         mode="create"

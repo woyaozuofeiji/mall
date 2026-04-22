@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { toPublicAdminPath } from "@/lib/admin-path";
 
 export interface AdminDictionary {
   common: {
@@ -493,5 +494,5 @@ export function resolveAdminLocale(value?: string): Locale {
 }
 
 export function adminHref(path: string, locale: Locale) {
-  return `${path}?locale=${locale}`;
+  return `${toPublicAdminPath(path)}?locale=${locale}`;
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCategoryBySlug, getShopProducts } from "@/lib/catalog";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
-import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { categoryContent, isSeoCategorySlug } from "@/lib/category-content";
 import { getRelatedGuides } from "@/lib/guide-content";
@@ -41,6 +41,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     path: `/shop/category/${category.slug}`,
+    primaryImagePath: getOgImagePath(locale, `/shop/category/${category.slug}`),
     title: copy.title,
     description: copy.description,
     images: shop.products.slice(0, 4).flatMap((product) => product.images.slice(0, 1).map((image) => image.url)),

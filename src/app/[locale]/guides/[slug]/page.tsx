@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductsBySlugs } from "@/lib/catalog";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd } from "@/lib/seo";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import { getGuideBySlug, getRelatedGuides } from "@/lib/guide-content";
 import { Container } from "@/components/ui/container";
@@ -34,6 +34,7 @@ export async function generateMetadata({
   const metadata = buildPageMetadata({
     locale,
     path: `/guides/${guide.slug}`,
+    primaryImagePath: getOgImagePath(locale, `/guides/${guide.slug}`),
     title: guide.title[locale],
     description: guide.description[locale],
     type: "article",

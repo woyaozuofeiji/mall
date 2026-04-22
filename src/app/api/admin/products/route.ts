@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 import { createAdminProduct } from "@/lib/admin";
 import { adminProductPayloadSchema } from "@/lib/validation/admin";
 
 export async function POST(request: Request) {
+  if (!(await getAuthenticatedAdmin())) {
+    return NextResponse.json({ message: "未授权访问后台接口" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const payload = adminProductPayloadSchema.parse(body);

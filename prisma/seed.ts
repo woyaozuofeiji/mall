@@ -1,4 +1,5 @@
 import { PrismaClient, ProductStatus } from "@prisma/client";
+import { hashAdminPassword } from "../src/lib/admin-crypto";
 import { categories, products } from "../src/lib/data";
 
 const prisma = new PrismaClient();
@@ -27,6 +28,7 @@ async function main() {
   await prisma.siteSetting.deleteMany();
   await prisma.importItem.deleteMany();
   await prisma.importBatch.deleteMany();
+  await prisma.admin.deleteMany();
 
   const categoryMap = new Map<string, string>();
   for (const category of categories) {
@@ -319,8 +321,25 @@ async function main() {
     },
   });
 
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@northstaratelier.com";
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "Admin123456!";
+
+  await prisma.admin.create({
+    data: {
+      email: adminEmail,
+      passwordHash: hashAdminPassword(adminPassword),
+      displayName: "Store Admin",
+      role: "admin",
+      active: true,
+    },
+  });
+
   console.log(`Seed completed with ${seededProducts.length} products.`);
   console.log(`Sample orders: ${orderOne.orderNumber}, ${orderTwo.orderNumber}, ${orderThree.orderNumber}`);
+  console.log(`Admin login: ${adminEmail}`);
+  if (!process.env.ADMIN_PASSWORD) {
+    console.warn("ADMIN_PASSWORD is not set. Using default seed password: Admin123456!");
+  }
 }
 
 main()

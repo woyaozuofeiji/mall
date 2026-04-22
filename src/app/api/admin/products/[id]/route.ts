@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 import { archiveOrDeleteAdminProduct, updateAdminProduct } from "@/lib/admin";
 import { adminProductPayloadSchema } from "@/lib/validation/admin";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await getAuthenticatedAdmin())) {
+    return NextResponse.json({ message: "未授权访问后台接口" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -23,6 +28,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await getAuthenticatedAdmin())) {
+    return NextResponse.json({ message: "未授权访问后台接口" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const result = await archiveOrDeleteAdminProduct(id);

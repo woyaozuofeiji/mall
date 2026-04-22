@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, adminHref, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminOrders } from "@/lib/orders";
 
@@ -9,6 +10,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: "/admin/orders" });
   const orders = await getAdminOrders();
 
   return (
@@ -18,6 +20,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
       locale={locale}
       dictionary={dictionary}
       currentPath="/admin/orders"
+      admin={admin}
     >
       <div className="mb-6 text-sm text-white/60">
         {dictionary.common.total} {orders.length} {dictionary.orders.countLabel}

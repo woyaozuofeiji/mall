@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { ImportActions } from "@/components/admin/import-actions";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminImportBatches } from "@/lib/imports";
 
@@ -9,6 +10,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: "/admin/imports" });
   const batches = await getAdminImportBatches();
   const latestBatch = batches[0];
 
@@ -19,6 +21,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
       locale={locale}
       dictionary={dictionary}
       currentPath="/admin/imports"
+      admin={admin}
     >
       <div className="mb-6 flex flex-col gap-4 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
         <p className="text-sm leading-7 text-white/70">{dictionary.imports.sampleHint}</p>

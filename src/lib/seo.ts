@@ -25,6 +25,11 @@ export function getLocalePath(locale: Locale, path = "") {
   return `/${locale}${normalizePath(path)}`;
 }
 
+export function getOgImagePath(locale: Locale, path = "") {
+  const normalizedPath = normalizePath(path);
+  return normalizedPath ? `/api/og/${locale}${normalizedPath}` : `/api/og/${locale}`;
+}
+
 export function getLanguageAlternates(path = "") {
   const normalizedPath = normalizePath(path);
 
@@ -48,6 +53,7 @@ export function buildPageMetadata(input: {
   title: string;
   description: string;
   path?: string;
+  primaryImagePath?: string;
   noIndex?: boolean;
   keywords?: string[];
   images?: Array<string | undefined | null>;
@@ -55,7 +61,11 @@ export function buildPageMetadata(input: {
 }) {
   const canonical = absoluteUrl(getLocalePath(input.locale, input.path));
   const description = truncateDescription(input.description);
-  const images = getAbsoluteImageUrls(input.images);
+  const imageCandidates = [
+    ...(input.primaryImagePath ? [input.primaryImagePath] : []),
+    ...(input.images ?? []),
+  ];
+  const images = Array.from(new Set(getAbsoluteImageUrls(imageCandidates)));
 
   return {
     title: input.title,
@@ -107,4 +117,3 @@ export function buildPageMetadata(input: {
 export function serializeJsonLd(value: Record<string, unknown>) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
-

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, adminHref, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminProducts } from "@/lib/admin";
 
@@ -9,6 +10,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: "/admin/products" });
   const products = await getAdminProducts();
 
   return (
@@ -18,6 +20,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
       locale={locale}
       dictionary={dictionary}
       currentPath="/admin/products"
+      admin={admin}
     >
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-white/60">

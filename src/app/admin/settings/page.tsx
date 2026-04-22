@@ -1,10 +1,12 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 
 export default async function AdminSettingsPage({ searchParams }: { searchParams: Promise<{ locale?: string }> }) {
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: "/admin/settings" });
 
   return (
     <AdminShell
@@ -13,6 +15,7 @@ export default async function AdminSettingsPage({ searchParams }: { searchParams
       locale={locale}
       dictionary={dictionary}
       currentPath="/admin/settings"
+      admin={admin}
     >
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">

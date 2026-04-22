@@ -7,7 +7,7 @@ import { HomeReferenceNewsletter } from "@/components/home/home-reference-newsle
 import { HomeReferenceProductRow } from "@/components/home/home-reference-product-row";
 import { getHomepageProducts, getShopProducts } from "@/lib/catalog";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd } from "@/lib/seo";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import type { Product } from "@/lib/types";
 
@@ -36,6 +36,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     path: "",
+    primaryImagePath: getOgImagePath(locale),
     title: locale === "zh" ? "毛绒玩偶、饰品与礼物精选" : "Boutique Plush Toys, Jewelry & Gift Ideas",
     description:
       locale === "zh"

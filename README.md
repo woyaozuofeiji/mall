@@ -46,6 +46,10 @@
 - 订单列表 / 订单详情 / 状态更新 / 运单录入
 - 导入中心
 - 内容页与设置页的后台壳子页面
+- 管理员邮箱密码登录
+- HttpOnly Cookie 会话
+- 后台页面与后台 API 鉴权
+- 可配置公开后台入口路径（默认 `/console/login`）
 - 后台整体 `noindex`
 
 ### 1.3 当前实现特性说明
@@ -55,13 +59,15 @@
 - 下单后订单状态会进入 `AWAITING_PAYMENT`
 - 在支付页确认支付后，订单会更新为 `CONFIRMED`
 - 后台可以继续把订单更新为 `PROCESSING`、`SHIPPED` 等状态
-- `/admin/login` 当前是预览入口，未接入真实登录鉴权
+- 后台当前已接入**管理员邮箱 + 密码登录**
+- 默认公开后台入口为 **`/console/login`**
+- 旧的 `/admin` 路径会跳转到新的公开后台路径
 
 ---
 
 ## 2. 线上已实现的 SEO 能力
 
-项目目前已经不是“只有 title 和 description”的基础 SEO，而是完成了较完整的第一到第四阶段 SEO 结构。
+项目目前已经不是“只有 title 和 description”的基础 SEO，而是完成了较完整的第一到第五阶段 SEO 结构。
 
 ### 2.1 基础技术 SEO
 
@@ -98,6 +104,7 @@
 - `/order-tracking`
 - `/search`
 - `/admin/*`
+- 公开后台入口（默认 `/console/*`）
 
 ### 2.3 结构化数据
 
@@ -202,6 +209,10 @@ DATABASE_URL="postgresql://mall:mall@localhost:54320/mall?schema=public"
 SITE_URL="https://mall.67win.cc"
 GOOGLE_SITE_VERIFICATION=""
 BING_SITE_VERIFICATION=""
+NEXT_PUBLIC_ADMIN_PATH="/console"
+ADMIN_SESSION_SECRET="change-this-admin-session-secret"
+ADMIN_EMAIL="admin@northstaratelier.com"
+ADMIN_PASSWORD="change-this-admin-password"
 ```
 
 ### 变量说明
@@ -237,6 +248,33 @@ Bing Webmaster 验证码。配置后会自动输出：
 ```
 
 > 如果暂时没有 Search Console / Bing 的 token，可以先留空，不影响站点正常运行。
+
+#### `NEXT_PUBLIC_ADMIN_PATH`
+
+公开后台访问路径，默认值：
+
+```env
+NEXT_PUBLIC_ADMIN_PATH="/console"
+```
+
+也就是说，默认后台入口会是：
+
+```text
+/console/login
+```
+
+#### `ADMIN_SESSION_SECRET`
+
+后台登录会话签名密钥。**生产环境必须改成强随机字符串。**
+
+#### `ADMIN_EMAIL`
+
+默认管理员邮箱。
+
+#### `ADMIN_PASSWORD`
+
+默认管理员密码。  
+如果数据库里还没有管理员，且该变量已正确配置，系统支持首次登录时自动创建管理员。
 
 ---
 
@@ -294,6 +332,37 @@ npm run db:reset
 3. 写入种子数据
 
 > 注意：`db:reset` 会清空当前数据库中的已有数据。
+
+如果你准备登录后台，建议同时确认：
+
+```env
+ADMIN_EMAIL="your-admin@example.com"
+ADMIN_PASSWORD="your-strong-password"
+ADMIN_SESSION_SECRET="a-long-random-secret"
+```
+
+然后执行：
+
+```bash
+npm run db:seed
+```
+
+或直接执行：
+
+```bash
+npm run db:reset
+```
+
+这样数据库里会创建管理员账号。
+
+如果你没有配置管理员环境变量，`seed` 也仍然会创建一个默认管理员：
+
+```text
+email: admin@northstaratelier.com
+password: Admin123456!
+```
+
+首次本地联调时可以先用这组默认账号进入后台，之后再改为你自己的环境变量。
 
 ### 6.7 启动开发服务器
 
@@ -443,13 +512,19 @@ http://localhost:30000
 
 ### 后台页面
 
-- `/admin/login`
-- `/admin`
-- `/admin/products`
-- `/admin/orders`
-- `/admin/imports`
-- `/admin/content`
-- `/admin/settings`
+- **推荐登录入口**：`/console/login`
+- 后台首页：`/console`
+- 商品管理：`/console/products`
+- 订单管理：`/console/orders`
+- 导入中心：`/console/imports`
+- 内容页：`/console/content`
+- 设置页：`/console/settings`
+
+说明：
+
+- `/admin/*` 仍作为内部兼容路径保留
+- 外部访问会被重定向 / rewrite 到新的公开后台路径
+- 线上使用时建议只对外使用 `/console/login`
 
 ---
 
@@ -464,6 +539,41 @@ http://localhost:30000
 - 站点设置数据
 - 订单样例数据
 - 一个导入批次样例
+- 一个管理员账号
+
+### 管理员种子账号
+
+`seed` 会始终创建一个管理员账号。
+
+如果你在环境变量中设置了：
+
+```env
+ADMIN_EMAIL="your-admin@example.com"
+ADMIN_PASSWORD="your-strong-password"
+```
+
+那么执行：
+
+```bash
+npm run db:seed
+```
+
+或：
+
+```bash
+npm run db:reset
+```
+
+后，会创建这个管理员账号。
+
+如果你没有设置环境变量，则会回退为：
+
+```text
+email: admin@northstaratelier.com
+password: Admin123456!
+```
+
+如果数据库里还没有管理员，而你又没有执行 seed，系统也支持在首次登录时使用环境变量中的 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 自动创建管理员。
 
 ### 可用于订单追踪测试的样例订单
 
@@ -498,7 +608,7 @@ http://localhost:30000/en/order-tracking?order=NSA-20260419-Z9X8&email=mia@examp
 后台导入页：
 
 ```text
-/admin/imports
+/console/imports
 ```
 
 当前导入逻辑支持：
@@ -541,7 +651,89 @@ http://localhost:30000/en/order-tracking?order=NSA-20260419-Z9X8&email=mia@examp
 
 ---
 
-## 13. 部署流程
+## 13. 后台登录与路径说明
+
+### 13.1 推荐后台入口
+
+默认公开后台入口：
+
+```text
+/console/login
+```
+
+例如：
+
+```text
+https://mall.67win.cc/console/login?locale=en
+```
+
+### 13.2 登录方式
+
+当前后台采用：
+
+- 管理员邮箱
+- 管理员密码
+- HttpOnly Cookie 会话
+
+登录成功后，后台页面和后台 API 才允许访问。
+
+### 13.3 如果还没有管理员怎么办
+
+有两种办法：
+
+#### 方案 1：执行 seed
+
+```bash
+npm run db:seed
+```
+
+或：
+
+```bash
+npm run db:reset
+```
+
+数据库中会创建管理员。
+
+如果未配置管理员环境变量，默认创建的账号是：
+
+```text
+email: admin@northstaratelier.com
+password: Admin123456!
+```
+
+#### 方案 2：首次登录自动创建管理员
+
+如果数据库中还没有任何管理员，并且环境变量里已经配置：
+
+```env
+ADMIN_EMAIL="your-admin@example.com"
+ADMIN_PASSWORD="your-strong-password"
+```
+
+那么第一次在登录页用这组账号登录时，系统会自动创建管理员。
+
+> 注意：如果 `ADMIN_PASSWORD` 仍然是 `.env.example` 里的占位值 `change-this-admin-password`，系统不会启用自动创建管理员逻辑。
+
+### 13.4 后台 API 保护
+
+这些接口现在都需要登录后才能访问：
+
+- `/api/admin/products`
+- `/api/admin/products/[id]`
+- `/api/admin/orders/[id]`
+- `/api/admin/imports/sample`
+- `/api/admin/imports/[id]/publish`
+
+未登录时会返回：
+
+```http
+401 Unauthorized
+```
+
+---
+
+## 14. 部署流程
 
 线上部署的标准顺序应该是：
 
@@ -595,9 +787,9 @@ npm run start
 
 ---
 
-## 14. Search Console / Bing 接入
+## 15. Search Console / Bing 接入
 
-### 14.1 Google Search Console
+### 15.1 Google Search Console
 
 选择 **HTML 标记验证** 后，会拿到一个 token。
 
@@ -613,7 +805,7 @@ GOOGLE_SITE_VERIFICATION="你的token"
 <meta name="google-site-verification" ... />
 ```
 
-### 14.2 Bing Webmaster Tools
+### 15.2 Bing Webmaster Tools
 
 拿到验证 token 后，写入：
 
@@ -627,7 +819,7 @@ BING_SITE_VERIFICATION="你的token"
 <meta name="msvalidate.01" ... />
 ```
 
-### 14.3 提交 sitemap
+### 15.3 提交 sitemap
 
 站长平台里提交：
 
@@ -637,7 +829,7 @@ https://mall.67win.cc/sitemap.xml
 
 ---
 
-## 15. 为什么“网页源代码看起来很乱”？
+## 16. 为什么“网页源代码看起来很乱”？
 
 这是 **Next.js 16 + App Router + React Server Components** 的正常现象。
 
@@ -663,7 +855,7 @@ https://mall.67win.cc/sitemap.xml
 
 ---
 
-## 16. 当前 SEO 发展阶段
+## 17. 当前 SEO 发展阶段
 
 ### 第一阶段
 
@@ -692,9 +884,16 @@ https://mall.67win.cc/sitemap.xml
 - guide ↔ 商品 双向关联
 - guide ↔ 分类 / 首页 / 页脚 多点内链
 
+### 第五阶段
+
+- 动态 OG 图片生成
+- 专用分享图 API
+- 带图片信息的 sitemap
+- 更强的分享卡片与图片抓取信号
+
 ---
 
-## 17. 项目结构
+## 18. 项目结构
 
 ```text
 mall/
@@ -713,7 +912,7 @@ mall/
 
 ---
 
-## 18. 关键代码入口
+## 19. 关键代码入口
 
 ### SEO 相关
 
@@ -743,27 +942,32 @@ mall/
 ### 后台
 
 - `src/lib/admin.ts`
+- `src/lib/admin-auth.ts`
+- `src/lib/admin-path.ts`
+- `src/lib/admin-crypto.ts`
 - `src/lib/imports.ts`
+- `src/app/admin/actions.ts`
+- `src/components/admin/admin-login-form.tsx`
+- `src/proxy.ts`
 - `src/app/admin/*`
 
 ---
 
-## 19. 后续建议
+## 20. 后续建议
 
 如果继续往后做，建议优先考虑：
 
 1. 接入真实支付（Stripe / PayPal）
-2. 完成后台登录鉴权
-3. 扩充更多 guide 内容页
-4. 给分类页 / 商品页 / guide 页做更专业的 OG 图片
+2. 补充后台权限分级（例如 super admin / editor）
+3. 增加管理员密码修改与重置流程
+4. 扩充更多 guide 内容页
 5. 接入 Google Search Console / Bing Webmaster Tools
 6. 持续优化商品详情正文，使其更贴近真实搜索需求
 
 ---
 
-## 20. 参考文档
+## 21. 参考文档
 
 - MVP 功能清单：`docs/mvp-functional-checklist.md`
 - Prisma Schema：`prisma/schema.prisma`
 - 种子数据：`prisma/seed.ts`
-

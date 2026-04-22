@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 import { categories as fallbackCategories, products as fallbackProducts } from "@/lib/data";
 import { locales } from "@/lib/i18n";
-import { getCatalogCategories, getPublishedProductSlugs } from "@/lib/catalog";
+import { getCatalogCategories, getPublishedProductSitemapEntries } from "@/lib/catalog";
 import { guides } from "@/lib/guide-content";
 import { absoluteUrl } from "@/lib/site";
-import { getLanguageAlternates } from "@/lib/seo";
+import { getLanguageAlternates, getOgImagePath } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
@@ -26,15 +26,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let productRoutes = fallbackProducts.map((product) => ({
     slug: product.slug,
     updatedAt: new Date(),
+    images: product.images.map((image) => image.url),
   }));
   let categoryRoutes = fallbackCategories.map((category) => category.slug);
 
   if (process.env.DATABASE_URL) {
     try {
-      const [records, categoryRecords] = await Promise.all([getPublishedProductSlugs(), getCatalogCategories()]);
+      const [records, categoryRecords] = await Promise.all([getPublishedProductSitemapEntries(), getCatalogCategories()]);
       productRoutes = records.map((record) => ({
         slug: record.slug,
         updatedAt: record.updatedAt,
+        images: record.images,
       }));
       categoryRoutes = categoryRecords.map((record) => record.slug);
     } catch {
@@ -49,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(),
         changeFrequency: route.changeFrequency as MetadataRoute.Sitemap[number]["changeFrequency"],
         priority: route.priority,
+        images: [absoluteUrl(route.path === "/guides" ? getOgImagePath(locale, "/guides") : getOgImagePath(locale))],
         alternates: {
           languages: getLanguageAlternates(route.path),
         },
@@ -60,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(),
         changeFrequency: "weekly" as MetadataRoute.Sitemap[number]["changeFrequency"],
         priority: 0.8,
+        images: [absoluteUrl(getOgImagePath(locale, `/shop/category/${slug}`))],
         alternates: {
           languages: getLanguageAlternates(`/shop/category/${slug}`),
         },
@@ -71,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(guide.updatedAt),
         changeFrequency: "monthly" as MetadataRoute.Sitemap[number]["changeFrequency"],
         priority: 0.7,
+        images: [absoluteUrl(getOgImagePath(locale, `/guides/${guide.slug}`))],
         alternates: {
           languages: getLanguageAlternates(`/guides/${guide.slug}`),
         },
@@ -82,6 +87,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: product.updatedAt,
         changeFrequency: "weekly" as MetadataRoute.Sitemap[number]["changeFrequency"],
         priority: 0.8,
+        images: Array.from(
+          new Set([
+            ...product.images.map((image) => absoluteUrl(image)),
+            absoluteUrl(getOgImagePath(locale, `/shop/${product.slug}`)),
+          ]),
+        ),
         alternates: {
           languages: getLanguageAlternates(`/shop/${product.slug}`),
         },

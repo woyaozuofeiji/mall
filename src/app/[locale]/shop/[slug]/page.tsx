@@ -7,7 +7,7 @@ import { getCategoryBySlug, getProductBySlug, getRelatedProducts } from "@/lib/c
 import { getRelatedGuides } from "@/lib/guide-content";
 import { formatCurrency } from "@/lib/format";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
-import { buildPageMetadata, serializeJsonLd, truncateDescription } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd, truncateDescription } from "@/lib/seo";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductCard } from "@/components/shop/product-card";
@@ -59,6 +59,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     path: `/shop/${product.slug}`,
+    primaryImagePath: getOgImagePath(locale, `/shop/${product.slug}`),
     title: t(locale, product.name),
     description,
     images: product.images.map((image) => image.url),

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdminProductForm } from "@/components/admin/product-form";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminProductById, getAdminProductFormMeta } from "@/lib/admin";
 
@@ -16,6 +17,7 @@ export default async function AdminProductDetailPage({
   const [{ id }, { locale: localeValue }] = await Promise.all([params, searchParams]);
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
+  const admin = await requireAdminPage({ locale, nextPath: `/admin/products/${id}` });
   const [product, meta] = await Promise.all([getAdminProductById(id), getAdminProductFormMeta()]);
 
   if (!product) {
@@ -29,6 +31,7 @@ export default async function AdminProductDetailPage({
       locale={locale}
       dictionary={dictionary}
       currentPath={`/admin/products/${id}`}
+      admin={admin}
     >
       <AdminProductForm
         mode="edit"

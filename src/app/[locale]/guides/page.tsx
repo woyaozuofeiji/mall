@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { getGuideSummaries } from "@/lib/guide-content";
 import { Container } from "@/components/ui/container";
@@ -20,6 +20,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     path: "/guides",
+    primaryImagePath: getOgImagePath(locale, "/guides"),
     title: locale === "zh" ? "选购指南与礼物灵感" : "Buying Guides & Gift Ideas",
     description:
       locale === "zh"
@@ -126,4 +127,3 @@ export default async function GuidesIndexPage({ params }: { params: Promise<{ lo
     </div>
   );
 }
-

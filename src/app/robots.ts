@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { PUBLIC_ADMIN_BASE } from "@/lib/admin-path";
 import { getSiteUrl } from "@/lib/site";
 import { locales } from "@/lib/i18n";
 
@@ -7,6 +8,8 @@ export default function robots(): MetadataRoute.Robots {
   const disallowPaths = [
     "/admin",
     "/admin/",
+    PUBLIC_ADMIN_BASE,
+    `${PUBLIC_ADMIN_BASE}/`,
     ...locales.flatMap((locale) => [
       `/${locale}/cart`,
       `/${locale}/checkout`,

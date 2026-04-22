@@ -332,3 +332,29 @@ export async function getPublishedProductSlugs() {
 
   return records;
 }
+
+export async function getPublishedProductSitemapEntries() {
+  const records = await prisma.product.findMany({
+    where: { status: "PUBLISHED" },
+    select: {
+      slug: true,
+      updatedAt: true,
+      images: {
+        select: {
+          url: true,
+          isCover: true,
+          sortOrder: true,
+          createdAt: true,
+        },
+        orderBy: [{ isCover: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return records.map((record) => ({
+    slug: record.slug,
+    updatedAt: record.updatedAt,
+    images: record.images.map((image) => image.url),
+  }));
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AtSign, ChevronDown, Globe, Music4, PlayCircle } from "lucide-react";
+import { adminHref } from "@/lib/admin-i18n";
 import type { Locale } from "@/lib/i18n";
 import { Container } from "@/components/ui/container";
 
@@ -30,7 +31,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           aboutLinks: [
             { href: `/${locale}/contact`, label: "品牌故事" },
             { href: `/${locale}/guides`, label: "选购指南" },
-            { href: `/admin`, label: "后台入口" },
+            { href: adminHref("/admin/login", locale), label: "后台入口" },
             { href: `/${locale}/policies/privacy`, label: "隐私政策" },
             { href: `/${locale}/policies/terms`, label: "服务条款" },
           ],
@@ -65,7 +66,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           aboutLinks: [
             { href: `/${locale}/contact`, label: "Our Story" },
             { href: `/${locale}/guides`, label: "Buying Guides" },
-            { href: `/admin`, label: "Admin" },
+            { href: adminHref("/admin/login", locale), label: "Admin" },
             { href: `/${locale}/policies/privacy`, label: "Privacy Policy" },
             { href: `/${locale}/policies/terms`, label: "Terms of Service" },
           ],
