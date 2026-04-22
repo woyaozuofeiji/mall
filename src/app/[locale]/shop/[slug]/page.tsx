@@ -5,9 +5,10 @@ import { notFound } from "next/navigation";
 import { ShieldCheck, Star, Truck } from "lucide-react";
 import { getCategoryBySlug, getProductBySlug, getRelatedProducts } from "@/lib/catalog";
 import { getRelatedGuides } from "@/lib/guide-content";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getDiscountPercent } from "@/lib/format";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
-import { buildPageMetadata, getOgImagePath, serializeJsonLd, truncateDescription } from "@/lib/seo";
+import { buildPageMetadata, getOgImagePath, serializeJsonLd } from "@/lib/seo";
+import { buildProductMetaDescription, getProductFacts, getProductGiftMoments, getProductSchemaDetails } from "@/lib/product-merchandising";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductCard } from "@/components/shop/product-card";
@@ -52,9 +53,8 @@ export async function generateMetadata({
     });
   }
 
-  const description = truncateDescription(
-    [t(locale, product.subtitle), t(locale, product.description)].filter(Boolean).join(" "),
-  );
+  const description = buildProductMetaDescription(product, locale);
+  const productFacts = getProductFacts(product, locale);
 
   return buildPageMetadata({
     locale,
@@ -63,7 +63,7 @@ export async function generateMetadata({
     title: t(locale, product.name),
     description,
     images: product.images.map((image) => image.url),
-    keywords: [t(locale, product.name), product.categorySlug, ...product.tags.slice(0, 6)],
+    keywords: [t(locale, product.name), product.categorySlug, ...productFacts.slice(0, 3).map((fact) => fact.value), ...product.tags.slice(0, 4)],
     type: "article",
   });
 }
@@ -94,10 +94,12 @@ export default async function ProductDetailPage({
   ]);
   const relatedGuides = getRelatedGuides(product.categorySlug as "plush" | "jewelry" | "gifts", locale).slice(0, 2);
   const heroSpecs = product.specs.slice(0, 3);
+  const productFacts = getProductFacts(product, locale);
+  const giftMoments = getProductGiftMoments(product, locale);
+  const schemaDetails = getProductSchemaDetails(product, locale);
+  const discountPercent = getDiscountPercent(product.price, product.compareAtPrice);
   const productUrl = absoluteUrl(`/${locale}/shop/${product.slug}`);
-  const productDescription = truncateDescription(
-    [t(locale, product.subtitle), t(locale, product.description)].filter(Boolean).join(" "),
-  );
+  const productDescription = buildProductMetaDescription(product, locale);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -135,13 +137,15 @@ export default async function ProductDetailPage({
         name: t(locale, product.name),
         description: productDescription,
         sku: product.sku ?? product.slug,
-        category: product.categorySlug,
+        category: category ? t(locale, category.name) : product.categorySlug,
         url: productUrl,
         brand: {
           "@type": "Brand",
           name: SITE_NAME,
         },
         image: product.images.map((image) => absoluteUrl(image.url)),
+        ...(schemaDetails.material ? { material: schemaDetails.material } : {}),
+        ...(schemaDetails.size ? { size: schemaDetails.size } : {}),
         offers: {
           "@type": "Offer",
           url: productUrl,
@@ -149,7 +153,17 @@ export default async function ProductDetailPage({
           price: product.price.toFixed(2),
           availability: getSchemaAvailability(product.availability ? t(locale, product.availability) : undefined),
           itemCondition: "https://schema.org/NewCondition",
+          seller: {
+            "@type": "Organization",
+            name: SITE_NAME,
+          },
         },
+        additionalProperty: schemaDetails.additionalProperty,
+        ...(schemaDetails.review.length > 0
+          ? {
+              review: schemaDetails.review,
+            }
+          : {}),
         ...(product.reviewSummary
           ? {
               aggregateRating: {
@@ -166,6 +180,22 @@ export default async function ProductDetailPage({
   return (
     <div className="space-y-10 pb-16 pt-8 sm:space-y-12 sm:pb-20 sm:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }} />
+      <div className="fixed inset-x-3 bottom-3 z-40 lg:hidden">
+        <div className="rounded-[1.25rem] bg-white/96 px-4 py-3 shadow-[0_22px_48px_-26px_rgba(47,43,50,0.35)] ring-1 ring-[rgba(241,225,230,0.95)] backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#2f2b32]">{t(locale, product.name)}</p>
+              <p className="text-sm text-[#6d6670]">{formatCurrency(product.price, locale)}</p>
+            </div>
+            <a
+              href="#quick-buy"
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(90deg,#ff8aa1_0%,#ff6d88_100%)] px-5 text-sm font-semibold text-white shadow-[0_18px_36px_-24px_rgba(255,109,136,0.72)]"
+            >
+              {locale === "zh" ? "选规格并加购" : "Choose options"}
+            </a>
+          </div>
+        </div>
+      </div>
       <Container className="space-y-8 sm:space-y-10">
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-[#8f8791]">
           <Link href={`/${locale}`} className="transition hover:text-[#ff6d88]">
@@ -195,6 +225,7 @@ export default async function ProductDetailPage({
               </Link>
               {product.featured ? <Badge className="border-transparent bg-[linear-gradient(90deg,#ff8aa1_0%,#ff6d88_100%)] text-white">{locale === "zh" ? "热销" : "Bestseller"}</Badge> : null}
               {product.isNew ? <Badge className="bg-[#fff3f6] text-[#ff6d88]">{locale === "zh" ? "新品" : "New"}</Badge> : null}
+              {discountPercent ? <Badge className="border-transparent bg-[#2f2b32] text-white">{locale === "zh" ? `省 ${discountPercent}%` : `Save ${discountPercent}%`}</Badge> : null}
               <span className="inline-flex items-center rounded-full bg-[#fff8fa] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f8791] ring-1 ring-[rgba(241,225,230,0.95)]">
                 {product.availability ? t(locale, product.availability) : locale === "zh" ? "有库存" : "In stock"}
               </span>
@@ -203,12 +234,24 @@ export default async function ProductDetailPage({
             <div className="space-y-3">
               <h1 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.04em] text-[#2f2b32] sm:text-[3.3rem]">{t(locale, product.name)}</h1>
               <p className="max-w-2xl text-[15px] leading-7 text-[#6d6670]">{t(locale, product.subtitle)}</p>
+              {discountPercent ? (
+                <p className="text-sm leading-7 text-[#8f8791]">
+                  {locale === "zh"
+                    ? `当前折扣约 ${discountPercent}% ，适合作为节日送礼、礼盒加购或搭配购买时快速决策。`
+                    : `Currently marked at about ${discountPercent}% off, which works well for gifting edits, bundle add-ons and quicker purchase decisions.`}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
               <div className="flex items-end gap-4">
                 <p className="text-[2rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{formatCurrency(product.price, locale)}</p>
-                {product.compareAtPrice ? <p className="pb-1 text-base text-[#b3a8b2] line-through">{formatCurrency(product.compareAtPrice, locale)}</p> : null}
+                {product.compareAtPrice ? (
+                  <p className="pb-1 text-base text-[#b3a8b2] line-through">
+                    {locale === "zh" ? "原价 " : "Was "}
+                    {formatCurrency(product.compareAtPrice, locale)}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6670]">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[#fff8fa] px-3.5 py-2 ring-1 ring-[rgba(241,225,230,0.95)]">
@@ -227,13 +270,26 @@ export default async function ProductDetailPage({
               </div>
             </div>
 
+            <div id="quick-buy">
+              <AddToCartButton product={product} locale={locale} cta={dictionary.common.addToCart} added={dictionary.common.added} />
+            </div>
+
             <div className="flex flex-wrap gap-2">
               {heroSpecs.map((spec) => (
                 <StorefrontInfoPill key={spec.label.en}>{t(locale, spec.label)} · {t(locale, spec.value)}</StorefrontInfoPill>
               ))}
             </div>
 
-            <AddToCartButton product={product} locale={locale} cta={dictionary.common.addToCart} added={dictionary.common.added} />
+            {productFacts.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {productFacts.map((fact) => (
+                  <div key={fact.key} className="rounded-[1.2rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] px-4 py-3 ring-1 ring-[rgba(241,225,230,0.95)]">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff7e95]">{fact.label}</p>
+                    <p className="mt-2 text-sm leading-7 text-[#2f2b32]">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </StorefrontPanel>
         </div>
 
@@ -278,6 +334,47 @@ export default async function ProductDetailPage({
                 <ShieldCheck className="mt-1 h-4 w-4 text-[#ff7e95]" />
                 <span>{locale === "zh" ? "售后、退换和包装承诺适合继续在这一屏里完整解释。" : "After-sales support, returns and packaging promises can continue to be explained cleanly in this section."}</span>
               </div>
+            </div>
+          </StorefrontPanel>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+          <StorefrontPanel className="p-6 sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+              {locale === "zh" ? "送礼与搭配灵感" : "Gift and styling ideas"}
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {giftMoments.map((item) => (
+                <div key={item} className="rounded-[1.25rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] px-4 py-4 ring-1 ring-[rgba(241,225,230,0.95)]">
+                  <p className="text-sm leading-7 text-[#2f2b32]">{item}</p>
+                </div>
+              ))}
+            </div>
+          </StorefrontPanel>
+
+          <StorefrontPanel className="p-6 sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+              {locale === "zh" ? "为什么适合当前分类" : "Why it fits this collection"}
+            </p>
+            <div className="mt-4 space-y-4 text-sm leading-8 text-[#6d6670]">
+              <p>
+                {locale === "zh"
+                  ? product.categorySlug === "plush"
+                    ? "毛绒类商品更依赖柔软手感、尺寸感知和礼物氛围，这件商品已经把材质、尺寸与包装信息前置展示，方便用户快速判断。"
+                    : product.categorySlug === "jewelry"
+                      ? "饰品类商品更强调近景质感、佩戴场景和礼盒感，这件商品将材质、尺寸与礼品包装信息集中展示，更利于转化。"
+                      : "礼物和生活方式小物更看重用途明确、体积友好和搭配空间，这件商品更适合做轻加购或组合推荐。"
+                  : product.categorySlug === "plush"
+                    ? "Plush products convert best when softness, scale and gifting atmosphere are easy to judge. This page surfaces those details early so the buying decision feels lighter."
+                    : product.categorySlug === "jewelry"
+                      ? "Jewelry products rely on close-up quality, wearability and gift-box appeal. This page brings material, sizing and packaging details forward to support conversion."
+                      : "Gift and lifestyle add-ons work best when usefulness, compact sizing and pairing potential are immediately clear. This page keeps those signals visible from the start."}
+              </p>
+              <p>
+                {locale === "zh"
+                  ? "如果你还在犹豫，可以继续查看下方参数、发货说明、评价和相关推荐，再决定是否加入购物车。"
+                  : "If you are still comparing options, keep scrolling for detailed specs, shipping notes, reviews and related products before adding it to cart."}
+              </p>
             </div>
           </StorefrontPanel>
         </div>

@@ -17,19 +17,19 @@ export type AdminLoginActionState =
   | undefined;
 
 const loginSchema = z.object({
-  email: z.email().trim(),
-  password: z.string().min(6).trim(),
+  email: z.string().trim().email(),
+  password: z.string().trim().min(6),
   locale: z.string().optional(),
   next: z.string().optional(),
 });
 
 export async function loginAdminAction(_state: AdminLoginActionState, formData: FormData): Promise<AdminLoginActionState> {
-  const locale = resolveAdminLocale(String(formData.get("locale") ?? "en"));
+  const locale = resolveAdminLocale(typeof formData.get("locale") === "string" ? String(formData.get("locale")) : "en");
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
-    locale: formData.get("locale"),
-    next: formData.get("next"),
+    locale: typeof formData.get("locale") === "string" ? formData.get("locale") : undefined,
+    next: typeof formData.get("next") === "string" ? formData.get("next") : undefined,
   });
 
   if (!parsed.success) {
@@ -64,4 +64,3 @@ export async function redirectIfAdminAuthenticated(localeValue?: string, nextPat
     redirect(sanitizeAdminNextPath(nextPath) ?? getAdminDashboardPath(locale));
   }
 }
-

@@ -97,7 +97,7 @@ export const en: SiteDictionary = {
   },
   content: {
     contactTitle: 'Contact Northstar Atelier',
-    contactDescription: 'Use this page to present formal channels for support, social communication and supplier coordination.',
+    contactDescription: 'Use this page to reach support and operations contacts for order, shipping, return and product questions.',
     faqTitle: 'Frequently asked questions',
     faqDescription: 'This section covers payment, shipping, packaging, after-sales support and order tracking guidance.',
   },

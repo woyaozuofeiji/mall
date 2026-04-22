@@ -62,7 +62,7 @@ export function AddToCartButton({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-md">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">{copy.heading}</p>
-          <p className="mt-1 text-xs leading-5 text-[#8f8791]">{copy.instant}</p>
+          <p className="mt-1 text-xs leading-5 text-[#8f8791] sm:text-[13px] sm:leading-6">{copy.instant}</p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full bg-[#fff3f6] px-4 py-2 text-xs font-medium text-[#6d6670] ring-1 ring-[rgba(248,192,205,0.62)]">
           <span>{product.images.length} {copy.images}</span>
@@ -79,7 +79,7 @@ export function AddToCartButton({
               key={variant.id}
               type="button"
               onClick={() => setVariantId(variant.id)}
-              className={`shrink-0 rounded-full border px-3.5 py-2 text-sm transition ${
+              className={`shrink-0 rounded-full border px-4 py-2.5 text-sm transition ${
                 activeVariant?.id === variant.id
                   ? "border-transparent bg-[linear-gradient(90deg,#ff8aa1_0%,#ff6d88_100%)] text-white shadow-[0_18px_36px_-24px_rgba(255,109,136,0.72)]"
                   : "border-[rgba(241,203,213,0.9)] bg-white text-[#625b66] hover:border-[rgba(255,126,149,0.55)] hover:text-[#ff6d88]"
@@ -98,7 +98,7 @@ export function AddToCartButton({
             <button
               type="button"
               onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-[#625b66] transition hover:bg-[#fff3f6]"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-[#625b66] transition hover:bg-[#fff3f6]"
               aria-label={copy.decreaseQuantity}
             >
               -
@@ -107,7 +107,7 @@ export function AddToCartButton({
             <button
               type="button"
               onClick={() => setQuantity((value) => Math.min(20, value + 1))}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-[#625b66] transition hover:bg-[#fff3f6]"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-[#625b66] transition hover:bg-[#fff3f6]"
               aria-label={copy.increaseQuantity}
             >
               +

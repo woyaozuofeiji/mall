@@ -28,6 +28,7 @@ export function OrderUpdateForm({
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -37,6 +38,20 @@ export function OrderUpdateForm({
   });
 
   const texts = dictionary.orders;
+  const deleteTexts =
+    locale === "zh"
+      ? {
+          deleteOrder: "删除订单",
+          deleteConfirm: "确认永久删除这笔订单吗？删除后订单项和发货记录会一起移除。",
+          deleteSuccess: "订单已删除。",
+          deleteFail: "删除订单失败。",
+        }
+      : {
+          deleteOrder: "Delete order",
+          deleteConfirm: "Delete this order permanently? Its line items and shipment records will also be removed.",
+          deleteSuccess: "Order deleted.",
+          deleteFail: "Failed to delete order.",
+        };
 
   const onSubmit = handleSubmit(async (values) => {
     setMessage(null);
@@ -59,6 +74,33 @@ export function OrderUpdateForm({
     setMessage(texts.updateSuccess);
     router.refresh();
   });
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(deleteTexts.deleteConfirm);
+    if (!confirmed) return;
+
+    setMessage(null);
+    setError(null);
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "DELETE",
+      });
+
+      const result = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        setError(result.message ?? deleteTexts.deleteFail);
+        return;
+      }
+
+      setMessage(deleteTexts.deleteSuccess);
+      router.push(adminHref("/admin/orders", locale));
+      router.refresh();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const inputClass =
     "mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white shadow-sm outline-none transition focus:border-white/30";
@@ -106,6 +148,14 @@ export function OrderUpdateForm({
         <Button href={adminHref("/admin/orders", locale)} variant="secondary">
           {texts.backToOrders}
         </Button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="inline-flex h-11 items-center justify-center rounded-full border border-rose-400/30 bg-rose-500/10 px-5 text-sm font-medium text-rose-100 transition hover:bg-rose-500/20 disabled:pointer-events-none disabled:opacity-50"
+        >
+          {isDeleting ? dictionary.common.loading : deleteTexts.deleteOrder}
+        </button>
       </div>
     </form>
   );

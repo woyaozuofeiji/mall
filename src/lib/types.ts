@@ -33,6 +33,16 @@ export interface ProductReviewSummary {
   count: number;
 }
 
+export interface ProductReview {
+  id?: string;
+  title?: LocalizedText;
+  author: string;
+  content: LocalizedText;
+  rating: number;
+  date?: string;
+  verified?: boolean;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -55,6 +65,7 @@ export interface Product {
   variants: ProductVariant[];
   specs: ProductSpec[];
   reviewSummary?: ProductReviewSummary;
+  reviews?: ProductReview[];
 }
 
 export interface SiteDictionary {

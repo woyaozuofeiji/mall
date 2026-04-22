@@ -123,6 +123,8 @@ export interface AdminDictionary {
     description: string;
     sourceItems: string;
     sampleHint: string;
+    publishTargetCategory: string;
+    keepOriginalCategory: string;
     batchStatus: string;
     approvedItems: string;
     publishedItems: string;
@@ -288,6 +290,8 @@ const adminEn: AdminDictionary = {
     description: "Use this page to sync normalized catalog items into import batches, then publish them into the live product catalog.",
     sourceItems: "source items",
     sampleHint: "Data source: external catalog feed normalized into your schema.",
+    publishTargetCategory: "Publish to category",
+    keepOriginalCategory: "Keep original category",
     batchStatus: "Batch status",
     approvedItems: "approved",
     publishedItems: "published",
@@ -453,6 +457,8 @@ const adminZh: AdminDictionary = {
     description: "在这里同步规范化后的商品源数据，进入导入批次后，再发布到正式商品库。",
     sourceItems: "条源数据",
     sampleHint: "数据来源：外部商品源数据，已规范化映射到你的商城结构。",
+    publishTargetCategory: "发布到分类",
+    keepOriginalCategory: "保持原分类",
     batchStatus: "批次状态",
     approvedItems: "已审核",
     publishedItems: "已发布",

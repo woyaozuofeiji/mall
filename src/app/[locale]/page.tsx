@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { HomeReferenceCategories } from "@/components/home/home-reference-categories";
 import { HomeReferenceGuides } from "@/components/home/home-reference-guides";
-import { HomeReferenceHero } from "@/components/home/home-reference-hero";
 import { HomeReferenceHighlights } from "@/components/home/home-reference-highlights";
 import { HomeReferenceNewsletter } from "@/components/home/home-reference-newsletter";
 import { HomeReferenceProductRow } from "@/components/home/home-reference-product-row";
@@ -62,9 +61,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const bestSellers = uniqueProducts([...featured, ...allProducts]).slice(0, 5);
   const newArrivals = uniqueProducts([...latest, ...allProducts.filter((product) => !bestSellers.some((item) => item.id === product.id))]).slice(0, 5);
 
-  const plushProduct = allProducts.find((product) => product.categorySlug === "plush") ?? bestSellers[0];
-  const accentProduct = allProducts.find((product) => product.id !== plushProduct?.id && product.categorySlug === "plush") ?? newArrivals[0];
-  const giftProduct = allProducts.find((product) => product.categorySlug === "jewelry") ?? bestSellers[1];
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -91,7 +87,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <div className="pb-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }} />
-      <HomeReferenceHero locale={locale} plushProduct={plushProduct} accentProduct={accentProduct} giftProduct={giftProduct} />
       <HomeReferenceCategories locale={locale} />
       <HomeReferenceHighlights locale={locale} />
 

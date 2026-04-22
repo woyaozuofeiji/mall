@@ -1,47 +1,142 @@
 import "server-only";
 
+import path from "node:path";
+import { promises as fs } from "node:fs";
 import { ImportItemStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createAdminProduct, updateAdminProduct } from "@/lib/admin";
+import { buildCatalogImportPresentation, resolveCatalogImportLocalCategory } from "@/lib/catalog-import-copy";
+import {
+  getImportMediaDirectoryFromUrl,
+  getImportStorageRoot,
+  getLegacyImportPublicRoot,
+} from "@/lib/import-media";
 import { adminProductPayloadSchema, type AdminProductPayload } from "@/lib/validation/admin";
 
-const titleZhMap: Record<string, string> = {
-  "Green Crystal Earring": "绿色水晶耳环",
-  "Green Oval Earring": "绿色椭圆耳饰",
-  "Tropical Earring": "热带风耳饰",
-  "Decoration Swing": "装饰秋千摆件",
-  "Family Tree Photo Frame": "家谱树相框",
-  "House Showpiece Plant": "房屋造型装饰盆栽",
-  "Plant Pot": "装饰花盆",
-  "Table Lamp": "桌面台灯",
-  "Blue Women's Handbag": "蓝色女士手提包",
-  "Heshe Women's Leather Bag": "Heshe 女士皮包",
-  "Prada Women Bag": "Prada 女士包",
-  "White Faux Leather Backpack": "白色仿皮双肩包",
-  "Women Handbag Black": "黑色女士手提包",
-};
+function getImportSourcePayload(payload: AdminProductPayload) {
+  return payload.sourcePayload && typeof payload.sourcePayload === "object" && !Array.isArray(payload.sourcePayload)
+    ? (payload.sourcePayload as Record<string, unknown>)
+    : undefined;
+}
 
-const titleSubtitleZhMap: Record<string, string> = {
-  "Green Crystal Earring": "适合礼品站陈列的彩色耳饰款",
-  "Green Oval Earring": "适合精品站详情页展示的简洁耳饰款",
-  "Tropical Earring": "适合活动页与礼盒组合陈列的耳饰款",
-  "Decoration Swing": "适合桌面礼品与家居装饰陈列的摆件",
-  "Family Tree Photo Frame": "适合礼物专题和家居频道陈列的相框",
-  "House Showpiece Plant": "适合桌面装饰和礼品组合陈列的小型摆件",
-  "Plant Pot": "适合桌面生活方式栏目陈列的小型花盆",
-  "Table Lamp": "适合桌面礼物和生活方式栏目的台灯",
-  "Blue Women's Handbag": "适合配饰频道陈列的女士手提包",
-  "Heshe Women's Leather Bag": "适合精品配饰页面陈列的皮包",
-  "Prada Women Bag": "适合高客单配饰栏目的品牌风格包款",
-  "White Faux Leather Backpack": "适合礼品与配件栏目的双肩包",
-  "Women Handbag Black": "适合通勤礼品和配饰页面的黑色手提包",
-};
+function getNestedRecord(input: Record<string, unknown> | undefined, key: string) {
+  const value = input?.[key];
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
 
-const categoryMapping: Record<string, "jewelry" | "gifts"> = {
-  "womens-jewellery": "jewelry",
-  "home-decoration": "gifts",
-  "womens-bags": "gifts",
-};
+function extractImportMediaDirectoriesFromNormalizedData(data: Prisma.JsonValue | null) {
+  const parsed = adminProductPayloadSchema.safeParse(data);
+  if (!parsed.success) {
+    return [];
+  }
+
+  const urls = [parsed.data.imageUrl, ...parsed.data.galleryImages.map((image) => image.url)];
+  return [...new Set(urls.map((url) => getImportMediaDirectoryFromUrl(url)).filter((value): value is string => Boolean(value)))];
+}
+
+async function getReferencedImportMediaDirectories() {
+  const [items, productImages] = await Promise.all([
+    prisma.importItem.findMany({
+      select: {
+        normalizedData: true,
+      },
+    }),
+    prisma.productImage.findMany({
+      where: {
+        OR: [{ url: { startsWith: "/api/media/imports/" } }, { url: { startsWith: "/imports/" } }],
+      },
+      select: {
+        url: true,
+      },
+    }),
+  ]);
+
+  const referencedDirectories = new Set<string>();
+
+  for (const item of items) {
+    for (const directory of extractImportMediaDirectoriesFromNormalizedData(item.normalizedData)) {
+      referencedDirectories.add(directory);
+    }
+  }
+
+  for (const image of productImages) {
+    const directory = getImportMediaDirectoryFromUrl(image.url);
+    if (directory) {
+      referencedDirectories.add(directory);
+    }
+  }
+
+  return referencedDirectories;
+}
+
+async function cleanupUnusedImportMediaDirectories(directories: Iterable<string>) {
+  const pending = [...new Set(Array.from(directories).map((value) => value.trim()).filter(Boolean))];
+  if (pending.length === 0) {
+    return [];
+  }
+
+  const referencedDirectories = await getReferencedImportMediaDirectories();
+  const cleaned: string[] = [];
+
+  for (const directory of pending) {
+    if (referencedDirectories.has(directory)) {
+      continue;
+    }
+
+    const segments = directory.split("/").filter(Boolean);
+    if (segments.length === 0) {
+      continue;
+    }
+
+    await Promise.all([
+      fs.rm(path.join(getImportStorageRoot(), ...segments), { recursive: true, force: true }),
+      fs.rm(path.join(getLegacyImportPublicRoot(), ...segments), { recursive: true, force: true }),
+    ]);
+    cleaned.push(directory);
+  }
+
+  return cleaned;
+}
+
+async function findExistingImportedProduct(payload: AdminProductPayload) {
+  const sourcePayload = getImportSourcePayload(payload);
+  const upstream = getNestedRecord(sourcePayload, "upstream");
+  const provider = typeof upstream?.provider === "string" ? upstream.provider : undefined;
+  const asin = typeof upstream?.asin === "string" ? upstream.asin : undefined;
+
+  if (provider && asin) {
+    const imported = await prisma.product.findFirst({
+      where: {
+        AND: [
+          {
+            sourcePayload: {
+              path: ["upstream", "provider"],
+              equals: provider,
+            },
+          },
+          {
+            sourcePayload: {
+              path: ["upstream", "asin"],
+              equals: asin,
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (imported) {
+      return imported;
+    }
+  }
+
+  return prisma.product.findUnique({
+    where: { slug: payload.slug },
+    select: { id: true },
+  });
+}
 
 const sourceCategories = ["womens-jewellery", "home-decoration", "womens-bags"] as const;
 
@@ -65,13 +160,13 @@ function compareAtPrice(price: number, discountPercentage?: number) {
   return Number((price / (1 - discountPercentage / 100)).toFixed(2));
 }
 
-function buildDummyGalleryImages(product: DummyProduct, coverImage: string) {
+function buildDummyGalleryImages(product: DummyProduct, coverImage: string, titleZh: string) {
   return (product.images ?? [])
     .filter((url) => url && url !== coverImage)
     .map((url, index) => ({
       url,
       altEn: `${product.title} gallery ${index + 1}`,
-      altZh: `${titleZhMap[product.title] ?? product.title} 展示图 ${index + 1}`,
+      altZh: `${titleZh} 展示图 ${index + 1}`,
     }));
 }
 
@@ -99,36 +194,33 @@ type DummyProduct = {
 };
 
 function normalizeDummyProduct(product: DummyProduct, categoryId: string): AdminProductPayload {
-  const localCategory = categoryMapping[product.category] ?? "gifts";
+  const presentation = buildCatalogImportPresentation(product);
   const imageUrl = product.images?.[0] ?? product.thumbnail ?? "/products/cloud-tray.svg";
-  const titleZh = titleZhMap[product.title] ?? product.title;
-  const subtitleZh = titleSubtitleZhMap[product.title] ?? product.description;
-  const subtitleEn = `${product.brand ?? product.category} catalog import item`;
-  const galleryImages = buildDummyGalleryImages(product, imageUrl);
+  const galleryImages = buildDummyGalleryImages(product, imageUrl, presentation.titleZh);
 
   return adminProductPayloadSchema.parse({
     slug: uniqueSlug(product.title, product.id),
     categoryId,
     status: "PUBLISHED",
     nameEn: product.title,
-    nameZh: titleZh,
-    subtitleEn,
-    subtitleZh,
-    descriptionEn: product.description,
-    descriptionZh: product.description,
-    storyEn: `Imported catalog product from source category ${product.category}, normalized for review and publication.`,
-    storyZh: `该商品来自商品源 ${product.category}，已完成规范化处理，可用于审核与发布流程。`,
+    nameZh: presentation.titleZh,
+    subtitleEn: presentation.subtitleEn,
+    subtitleZh: presentation.subtitleZh,
+    descriptionEn: presentation.descriptionEn,
+    descriptionZh: presentation.descriptionZh,
+    storyEn: presentation.storyEn,
+    storyZh: presentation.storyZh,
     leadTimeEn: product.shippingInformation ?? "Ships in 3-5 business days",
     leadTimeZh: product.shippingInformation ?? "3-5 个工作日发货",
-    shippingNoteEn: `${product.availabilityStatus ?? "In Stock"}. ${product.returnPolicy ?? "Manual policy review required."}`,
-    shippingNoteZh: `${product.availabilityStatus ?? "有库存"}。${product.returnPolicy ?? "需要人工确认售后政策。"}`,
+    shippingNoteEn: presentation.shippingNoteEn,
+    shippingNoteZh: presentation.shippingNoteZh,
     imageUrl,
     galleryImages,
     price: product.price,
     compareAtPrice: compareAtPrice(product.price, product.discountPercentage),
-    featured: localCategory === "jewelry",
+    featured: presentation.localCategory === "jewelry",
     isNew: true,
-    tags: [...new Set([...(product.tags ?? []), product.category, product.brand ?? "catalog-import", localCategory])],
+    tags: [...new Set([...(presentation.tags ?? []), presentation.localCategory])],
     variants: [
       {
         labelEn: product.brand ? `${product.brand} default` : "Default",
@@ -193,7 +285,6 @@ export async function importDummyjsonSampleBatch() {
     select: { id: true, slug: true },
   });
   const categoryIdMap = new Map(categories.map((category) => [category.slug, category.id]));
-
   const fetchedGroups = await Promise.all(sourceCategories.map((category) => fetchCategoryProducts(category)));
   const flattened = fetchedGroups.flat();
 
@@ -205,7 +296,7 @@ export async function importDummyjsonSampleBatch() {
       totalItems: flattened.length,
       items: {
         create: flattened.map((product) => {
-          const localCategorySlug = categoryMapping[product.category] ?? "gifts";
+          const localCategorySlug = resolveCatalogImportLocalCategory(product);
           const categoryId = categoryIdMap.get(localCategorySlug);
           if (!categoryId) {
             throw new Error(`本地分类缺失: ${localCategorySlug}`);
@@ -227,7 +318,7 @@ export async function importDummyjsonSampleBatch() {
   return batch;
 }
 
-export async function publishImportBatch(batchId: string) {
+export async function publishImportBatch(batchId: string, options?: { categoryId?: string }) {
   const batch = await prisma.importBatch.findUnique({
     where: { id: batchId },
     include: { items: true },
@@ -237,6 +328,27 @@ export async function publishImportBatch(batchId: string) {
     throw new Error("导入批次不存在");
   }
 
+  if (options?.categoryId) {
+    const category = await prisma.category.findUnique({
+      where: { id: options.categoryId },
+      select: { id: true },
+    });
+
+    if (!category) {
+      throw new Error("指定的发布分类不存在");
+    }
+
+    const normalizedCategoryIds = new Set(
+      batch.items
+        .filter((item) => item.normalizedData && item.status !== ImportItemStatus.REJECTED)
+        .map((item) => adminProductPayloadSchema.parse(item.normalizedData).categoryId),
+    );
+
+    if (normalizedCategoryIds.size > 1) {
+      throw new Error("这个批次包含多个原始分类，不能整体覆盖到单一分类。请保持原分类或拆分后再发布。");
+    }
+  }
+
   let publishedCount = 0;
 
   for (const item of batch.items) {
@@ -244,11 +356,27 @@ export async function publishImportBatch(batchId: string) {
       continue;
     }
 
-    const payload = adminProductPayloadSchema.parse(item.normalizedData);
-    const existing = await prisma.product.findUnique({
-      where: { slug: payload.slug },
-      select: { id: true },
+    let draftPayload = adminProductPayloadSchema.parse(item.normalizedData);
+
+    const rawPayload = item.rawPayload as Record<string, unknown> | null;
+    if (rawPayload?.source === "amazon-import") {
+      const { renormalizeStoredAmazonImportItem } = await import("@/lib/amazon-imports");
+      const normalized = await renormalizeStoredAmazonImportItem({
+        rawPayload: item.rawPayload,
+        normalizedData: item.normalizedData,
+      });
+
+      if (normalized?.payload) {
+        draftPayload = normalized.payload;
+      }
+    }
+
+    const payload = adminProductPayloadSchema.parse({
+      ...draftPayload,
+      categoryId: options?.categoryId ?? draftPayload.categoryId,
+      status: "PUBLISHED",
     });
+    const existing = await findExistingImportedProduct(payload);
 
     let productId = existing?.id;
 
@@ -283,6 +411,49 @@ export async function publishImportBatch(batchId: string) {
   });
 
   return { publishedCount };
+}
+
+export async function deleteImportBatch(batchId: string) {
+  const batch = await prisma.importBatch.findUnique({
+    where: { id: batchId },
+    include: {
+      items: {
+        select: {
+          id: true,
+          normalizedData: true,
+        },
+      },
+    },
+  });
+
+  if (!batch) {
+    throw new Error("导入批次不存在");
+  }
+
+  const linkedProductIds = new Set(
+    batch.items
+      .map((item) => {
+        const data = item.normalizedData as Record<string, unknown> | null;
+        return typeof data?.publishedProductId === "string" ? data.publishedProductId : null;
+      })
+      .filter((value): value is string => Boolean(value)),
+  );
+  const importMediaDirectories = new Set(
+    batch.items.flatMap((item) => extractImportMediaDirectoriesFromNormalizedData(item.normalizedData)),
+  );
+
+  await prisma.importBatch.delete({
+    where: { id: batchId },
+  });
+
+  const cleanedMediaDirectories = await cleanupUnusedImportMediaDirectories(importMediaDirectories);
+
+  return {
+    deletedBatchId: batch.id,
+    deletedItemCount: batch.items.length,
+    linkedProductCount: linkedProductIds.size,
+    cleanedMediaDirectoryCount: cleanedMediaDirectories.length,
+  };
 }
 
 export async function getAdminImportBatches() {

@@ -50,6 +50,7 @@ export const adminProductPayloadSchema = z.object({
   tags: z.array(z.string().min(1)).default([]),
   variants: z.array(adminProductVariantSchema).default([]),
   specs: z.array(adminProductSpecSchema).default([]),
+  sourcePayload: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const adminOrderUpdatePayloadSchema = z.object({
@@ -59,5 +60,10 @@ export const adminOrderUpdatePayloadSchema = z.object({
   trackingNumber: nullableTrimmedString,
 });
 
+export const adminBulkDeletePayloadSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
+});
+
 export type AdminProductPayload = z.infer<typeof adminProductPayloadSchema>;
 export type AdminOrderUpdatePayload = z.infer<typeof adminOrderUpdatePayloadSchema>;
+export type AdminBulkDeletePayload = z.infer<typeof adminBulkDeletePayloadSchema>;

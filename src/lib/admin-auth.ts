@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import "server-only";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_SESSION_COOKIE, ADMIN_SESSION_TTL_DAYS } from "@/lib/admin-auth-config";
@@ -74,6 +74,16 @@ function verifySessionToken(token?: string) {
   }
 
   return payload;
+}
+
+async function shouldUseSecureAdminCookie() {
+  if (process.env.NODE_ENV !== "production") {
+    return false;
+  }
+
+  const headerStore = await headers();
+  const forwardedProto = headerStore.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  return forwardedProto === "https";
 }
 
 export async function authenticateAdminCredentials(email: string, password: string) {
@@ -158,11 +168,12 @@ export async function createAdminSession(admin: AuthenticatedAdmin) {
   const encodedPayload = encodeSessionPayload(payload);
   const signature = signAdminSessionData(encodedPayload, sessionSecret);
   const token = `${encodedPayload}.${signature}`;
+  const secure = await shouldUseSecureAdminCookie();
 
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     expires: expiresAt,
     sameSite: "lax",
     path: "/",

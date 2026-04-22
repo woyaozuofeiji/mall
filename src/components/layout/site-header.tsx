@@ -47,6 +47,7 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
     locale === "zh" ? "订单满 $59 包邮" : "Free Shipping on orders over $59";
   const tagline =
     locale === "zh" ? "给日常增添一点温柔闪光" : "Treasures for Every Day";
+  const mobileBrand = locale === "zh" ? "Northstar" : "Northstar";
 
   return (
     <header className="sticky top-0 z-50 border-b border-[rgba(247,208,219,0.7)] bg-white/92 backdrop-blur-xl">
@@ -69,10 +70,11 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <Link href={`/${locale}`} className="shrink-0 text-[#2f2b32]">
-          <p className="font-serif text-[2.6rem] leading-none tracking-[-0.04em] sm:text-[3rem]">{dictionary.brand}</p>
-          <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.26em] text-[#8b838d]">{tagline}</p>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 overflow-x-clip px-4 py-4 sm:gap-6 sm:px-6 sm:py-5 lg:px-8">
+        <Link href={`/${locale}`} className="min-w-0 flex-1 text-[#2f2b32]">
+          <p className="truncate font-serif text-[1.8rem] leading-none tracking-[-0.04em] sm:hidden">{mobileBrand}</p>
+          <p className="hidden font-serif text-[3rem] leading-none tracking-[-0.04em] sm:block">{dictionary.brand}</p>
+          <p className="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.26em] text-[#8b838d] sm:block">{tagline}</p>
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -90,24 +92,24 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="shrink-0 flex items-center gap-1.5 sm:gap-3">
           <Link
             href={`/${locale}/search`}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88]"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88]"
             aria-label={dictionary.nav.search}
           >
             <Search className="h-5 w-5" />
           </Link>
           <Link
             href={`/${locale}/contact`}
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88] sm:flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88] sm:flex"
             aria-label={dictionary.nav.contact}
           >
             <CircleUserRound className="h-5 w-5" />
           </Link>
           <Link
             href={`/${locale}/cart`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88]"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88]"
             aria-label={dictionary.nav.cart}
           >
             <ShoppingCart className="h-5 w-5" />
@@ -118,7 +120,7 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88] lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[#332f36] transition hover:bg-[#fff1f4] hover:text-[#ff6d88] lg:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />

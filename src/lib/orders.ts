@@ -35,6 +35,29 @@ export interface OrderLookupResult {
   }>;
 }
 
+export interface AdminOrderListItem {
+  id: string;
+  orderNumber: string;
+  status: Lowercase<OrderStatus>;
+  customerName: string;
+  email: string;
+  itemCount: number;
+  totalAmount: number;
+  createdAt: string;
+  trackingNumber: string | null;
+  carrier: string | null;
+}
+
+export interface AdminOrderDeleteResult {
+  selectedCount: number;
+  deletedCount: number;
+  notFoundCount: number;
+}
+
+function normalizeIds(ids: string[]) {
+  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+}
+
 function toLowerStatus(status: OrderStatus): Lowercase<OrderStatus> {
   return status.toLowerCase() as Lowercase<OrderStatus>;
 }
@@ -256,7 +279,7 @@ export async function getAdminOrders() {
     },
   });
 
-  return orders.map((order) => ({
+  return orders.map<AdminOrderListItem>((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
     status: toLowerStatus(order.status),
@@ -384,4 +407,67 @@ export async function updateAdminOrder(id: string, payload: AdminOrderUpdatePayl
   });
 
   return { success: true };
+}
+
+export async function deleteAdminOrder(id: string) {
+  const result = await deleteAdminOrders([id]);
+  if (result.deletedCount === 0) {
+    throw new Error("订单不存在");
+  }
+  return { success: true as const };
+}
+
+export async function deleteAdminOrders(ids: string[]): Promise<AdminOrderDeleteResult> {
+  const normalizedIds = normalizeIds(ids);
+  if (normalizedIds.length === 0) {
+    throw new Error("请先选择要删除的订单");
+  }
+
+  const orders = await prisma.order.findMany({
+    where: {
+      id: {
+        in: normalizedIds,
+      },
+    },
+    select: {
+      id: true,
+      addressId: true,
+    },
+  });
+
+  if (orders.length === 0) {
+    throw new Error("订单不存在");
+  }
+
+  const orderIds = orders.map((order) => order.id);
+  const addressIds = [...new Set(orders.map((order) => order.addressId).filter((addressId): addressId is string => Boolean(addressId)))];
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.deleteMany({
+      where: {
+        id: {
+          in: orderIds,
+        },
+      },
+    });
+
+    if (addressIds.length > 0) {
+      await tx.address.deleteMany({
+        where: {
+          id: {
+            in: addressIds,
+          },
+          orders: {
+            none: {},
+          },
+        },
+      });
+    }
+  });
+
+  return {
+    selectedCount: normalizedIds.length,
+    deletedCount: orderIds.length,
+    notFoundCount: normalizedIds.length - orderIds.length,
+  };
 }

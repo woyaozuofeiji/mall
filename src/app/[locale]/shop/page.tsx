@@ -1,44 +1,48 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getShopProducts } from "@/lib/catalog";
+import { getCatalogCategories } from "@/lib/catalog";
 import { getDictionary, isLocale, t } from "@/lib/i18n";
 import { buildPageMetadata } from "@/lib/seo";
-import { ProductCard } from "@/components/shop/product-card";
-import { StorefrontPageHero, StorefrontPanel, StorefrontInfoPill } from "@/components/storefront/page-hero";
+import { StorefrontPanel, StorefrontInfoPill } from "@/components/storefront/page-hero";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
+type ShopSearchParams = {
+  category?: string | string[];
+  sort?: string | string[];
+  q?: string | string[];
+  page?: string | string[];
+};
+
+function getSingleValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export async function generateMetadata({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string; sort?: "featured" | "newest" | "price_low" | "price_high"; q?: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const query = await searchParams;
   if (!isLocale(locale)) {
     return {};
   }
 
-  const noIndex = Boolean(query.category || query.sort || query.q?.trim());
-
   return buildPageMetadata({
     locale,
     path: "/shop",
-    noIndex,
-    title: locale === "zh" ? "选购毛绒玩偶、饰品与送礼好物" : "Shop Curated Plush Toys, Jewelry & Gifts",
+    title: locale === "zh" ? "商品分类与选购入口" : "Shop Directory & Collection Entry",
     description:
       locale === "zh"
-        ? "浏览 Northstar Atelier 的精选商品系列，涵盖毛绒玩偶、礼物饰品与轻礼品好物。"
-        : "Browse Northstar Atelier's curated collection of plush toys, gift-ready jewelry and boutique accessories.",
+        ? "从这里进入毛绒、饰品与礼品分类，或直接搜索商品、查看选购指南与订单服务。"
+        : "Start here for plush, jewelry and gift collections, or jump directly into product search, guides and order services.",
     keywords:
       locale === "zh"
-        ? ["毛绒玩偶", "礼物", "饰品", "礼品商店", "商品列表"]
-        : ["shop gifts", "plush toys", "jewelry", "gift ideas", "boutique accessories"],
+        ? ["商品分类", "商品入口", "毛绒玩偶", "饰品", "送礼"]
+        : ["shop directory", "plush toys", "jewelry", "gift ideas", "shop collections"],
   });
 }
 
@@ -47,123 +51,180 @@ export default async function ShopPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string; sort?: "featured" | "newest" | "price_low" | "price_high"; q?: string }>;
+  searchParams: Promise<ShopSearchParams>;
 }) {
   const { locale } = await params;
   const query = await searchParams;
   if (!isLocale(locale)) {
     return null;
   }
-  const dictionary = getDictionary(locale);
 
-  if (query.category && query.category !== "all" && !query.q?.trim() && (!query.sort || query.sort === "featured")) {
-    redirect(`/${locale}/shop/category/${query.category}`);
+  const category = getSingleValue(query.category)?.trim();
+  const keyword = getSingleValue(query.q)?.trim();
+
+  if (keyword) {
+    redirect(`/${locale}/search?q=${encodeURIComponent(keyword)}`);
   }
 
-  const { categories, products } = await getShopProducts({
-    category: query.category,
-    sort: query.sort,
-    q: query.q,
-  });
+  if (category && category !== "all") {
+    redirect(`/${locale}/shop/category/${category}`);
+  }
+
+  if (getSingleValue(query.sort) || getSingleValue(query.page)) {
+    redirect(`/${locale}/shop`);
+  }
+
+  const dictionary = getDictionary(locale);
+  const categories = await getCatalogCategories();
+
+  const copy =
+    locale === "zh"
+      ? {
+          introEyebrow: "选购入口",
+          introTitle: "从这里进入你真正想逛的分类",
+          introDescription:
+            "这个页面不再承担完整商品展示，而是作为总导航入口：先进入分类、再搜索关键词，或继续查看指南、售后与订单服务。",
+          categoryEyebrow: "分类导航",
+          categoryTitle: "先选方向，再开始浏览商品",
+          categoryDescription:
+            "如果你已经知道自己更偏向毛绒、饰品还是送礼类商品，直接进入对应分类页会比先看混合商品列表更高效。",
+          categoryCta: "进入分类",
+          searchEyebrow: "快速搜索",
+          searchTitle: "如果你已经知道关键词，直接搜索更快",
+          searchDescription: "按商品标题、标签或你记得的关键词搜索，搜索结果会单独进入搜索页展示。",
+          searchSubmit: "搜索商品",
+          serviceEyebrow: "购物服务",
+          serviceTitle: "浏览前如果还想确认服务信息，可以从这里继续",
+          serviceDescription: "把购物相关服务统一放在这里，避免 /shop 再重复承担首页和分类页已经提供的商品展示任务。",
+          serviceLinks: [
+            { label: "选购指南", href: `/${locale}/guides`, description: "先看送礼、材质和搭配建议" },
+            { label: "常见问题", href: `/${locale}/faq`, description: "查看支付、配送与售后说明" },
+            { label: "订单查询", href: `/${locale}/order-tracking`, description: "已下单用户可在这里查状态" },
+            { label: "发货政策", href: `/${locale}/policies/shipping`, description: "提前确认配送与时效规则" },
+          ],
+          bottomNote: "商品详情页与分类页已经承担真正的商品浏览任务，这里只保留分流与服务入口。",
+        }
+      : {
+          introEyebrow: "Shop directory",
+          introTitle: "Start with the collection you actually want to browse",
+          introDescription:
+            "This page no longer carries the full catalog. It now works as a clean directory for category entry, keyword search, guides, and order-related services.",
+          categoryEyebrow: "Collection navigation",
+          categoryTitle: "Pick a direction before opening product lists",
+          categoryDescription:
+            "If you already know whether you want plush, jewelry or gift-oriented products, entering the matching category page is faster than browsing a mixed grid first.",
+          categoryCta: "Open collection",
+          searchEyebrow: "Quick search",
+          searchTitle: "If you already know the keyword, search directly",
+          searchDescription: "Search by title, tag, or any keyword you remember. Results are shown separately on the search page.",
+          searchSubmit: "Search products",
+          serviceEyebrow: "Shopping services",
+          serviceTitle: "Need service information before browsing? Continue from here",
+          serviceDescription:
+            "This keeps shopping support in one place so /shop no longer repeats the homepage and category pages with another full product display.",
+          serviceLinks: [
+            { label: "Buying guides", href: `/${locale}/guides`, description: "Read gifting, material and pairing guidance first" },
+            { label: "FAQ", href: `/${locale}/faq`, description: "Check payment, shipping and support details" },
+            { label: "Track order", href: `/${locale}/order-tracking`, description: "Look up order status after purchase" },
+            { label: "Shipping policy", href: `/${locale}/policies/shipping`, description: "Review delivery timing and fulfillment notes" },
+          ],
+          bottomNote: "Category pages and product detail pages now handle the real browsing flow. This route stays focused on routing and support.",
+        };
 
   return (
     <div className="space-y-10 pb-16 sm:space-y-12 sm:pb-20">
-      <StorefrontPageHero
-        eyebrow="Collection"
-        title={dictionary.shop.title}
-        description={dictionary.shop.description}
-        side={
-          <div className="space-y-4 text-[#6b6470]">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">
-              {locale === "zh" ? "选购范围" : "Collection scope"}
-            </p>
-            <p className="text-sm leading-7">
-              {locale === "zh"
-                ? `当前共有 ${products.length} 个精选商品，覆盖毛绒玩偶、首饰配饰和桌面礼品，适合送礼、加购和跨境轻小件发货场景。`
-                : `${products.length} curated products are currently visible across plush toys, jewelry and compact gift items for gifting, add-on purchases and lightweight international shipping.`}
-            </p>
+      <Container className="space-y-8 pt-6 sm:pt-8">
+        <StorefrontPanel className="p-6 sm:p-8">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">{copy.introEyebrow}</p>
+              <h1 className="mt-3 text-[2.15rem] font-semibold tracking-[-0.04em] text-[#2f2b32] sm:text-[2.75rem]">
+                {copy.introTitle}
+              </h1>
+              <p className="mt-4 text-sm leading-8 text-[#6d6670] sm:text-[15px]">{copy.introDescription}</p>
+            </div>
+
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <StorefrontInfoPill key={category.id} className="bg-white">
-                  <Link href={`/${locale}/shop/category/${category.slug}`}>{t(locale, category.name)}</Link>
-                </StorefrontInfoPill>
-              ))}
+              <StorefrontInfoPill>{locale === "zh" ? `${categories.length} 个核心分类` : `${categories.length} core collections`}</StorefrontInfoPill>
+              <StorefrontInfoPill>{locale === "zh" ? "搜索 / 指南 / 售后" : "Search / Guides / Support"}</StorefrontInfoPill>
             </div>
           </div>
-        }
-      />
+        </StorefrontPanel>
 
-      <Container className="space-y-8">
-        <StorefrontPanel>
-          <form className="grid gap-3 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:items-end">
-            <label className="space-y-2 text-sm text-[#574f5a]">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">{dictionary.nav.search}</span>
+        <section className="space-y-5">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">{copy.categoryEyebrow}</p>
+            <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.03em] text-[#2f2b32] sm:text-[2.25rem]">{copy.categoryTitle}</h2>
+            <p className="mt-3 text-sm leading-8 text-[#6d6670]">{copy.categoryDescription}</p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            {categories.map((categoryItem, index) => (
+              <Link
+                key={categoryItem.id}
+                href={`/${locale}/shop/category/${categoryItem.slug}`}
+                className="group rounded-[1.8rem] border border-[rgba(241,225,230,0.95)] bg-[linear-gradient(180deg,#fffafb_0%,#ffffff_100%)] p-5 shadow-[0_24px_64px_-48px_rgba(210,167,181,0.42)] transition hover:-translate-y-1 hover:shadow-[0_30px_72px_-46px_rgba(210,167,181,0.54)] sm:p-6"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c48397]">
+                    {locale === "zh" ? `分类 ${String(index + 1).padStart(2, "0")}` : `Collection ${String(index + 1).padStart(2, "0")}`}
+                  </p>
+                  <span className="rounded-full border border-[rgba(241,225,230,0.95)] bg-white px-3 py-1 text-[11px] font-medium text-[#7b7280]">
+                    {t(locale, categoryItem.name)}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-[1.5rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{t(locale, categoryItem.name)}</h3>
+                <p className="mt-3 text-sm leading-7 text-[#6d6670]">{t(locale, categoryItem.description)}</p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[#3b353a] transition group-hover:translate-x-0.5 group-hover:text-[#ff6d88]">
+                  {copy.categoryCta}
+                  <span aria-hidden>→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
+          <StorefrontPanel className="p-6 sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">{copy.searchEyebrow}</p>
+            <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.03em] text-[#2f2b32] sm:text-[2.05rem]">{copy.searchTitle}</h2>
+            <p className="mt-3 text-sm leading-8 text-[#6d6670]">{copy.searchDescription}</p>
+
+            <form action={`/${locale}/search`} className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
               <input
                 name="q"
-                defaultValue={query.q}
                 placeholder={dictionary.shop.searchPlaceholder}
                 className="h-12 w-full rounded-[1rem] border border-[rgba(241,203,213,0.9)] bg-[#fffdfd] px-4 text-sm outline-none transition focus:border-[rgba(255,126,149,0.55)]"
               />
-            </label>
+              <Button type="submit" className="sm:w-auto">
+                {copy.searchSubmit}
+              </Button>
+            </form>
+          </StorefrontPanel>
 
-            <label className="space-y-2 text-sm text-[#574f5a]">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">{dictionary.shop.filters}</span>
-              <select
-                name="category"
-                defaultValue={query.category ?? "all"}
-                className="h-12 w-full rounded-[1rem] border border-[rgba(241,203,213,0.9)] bg-[#fffdfd] px-4 text-sm outline-none transition focus:border-[rgba(255,126,149,0.55)]"
-              >
-                <option value="all">{dictionary.shop.allCategories}</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.slug}>
-                    {t(locale, category.name)}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <StorefrontPanel className="p-6 sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">{copy.serviceEyebrow}</p>
+            <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.03em] text-[#2f2b32] sm:text-[2.05rem]">{copy.serviceTitle}</h2>
+            <p className="mt-3 text-sm leading-8 text-[#6d6670]">{copy.serviceDescription}</p>
 
-            <label className="space-y-2 text-sm text-[#574f5a]">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">{dictionary.shop.sortBy}</span>
-              <select
-                name="sort"
-                defaultValue={query.sort ?? "featured"}
-                className="h-12 w-full rounded-[1rem] border border-[rgba(241,203,213,0.9)] bg-[#fffdfd] px-4 text-sm outline-none transition focus:border-[rgba(255,126,149,0.55)]"
-              >
-                <option value="featured">{dictionary.shop.featured}</option>
-                <option value="newest">{dictionary.shop.newest}</option>
-                <option value="price_low">{dictionary.shop.priceLow}</option>
-                <option value="price_high">{dictionary.shop.priceHigh}</option>
-              </select>
-            </label>
-
-            <Button type="submit" className="w-full lg:w-auto">
-              {locale === "zh" ? "应用筛选" : "Apply"}
-            </Button>
-          </form>
-        </StorefrontPanel>
-
-        <div className="flex flex-wrap gap-2">
-          <StorefrontInfoPill>{locale === "zh" ? `商品 ${products.length}` : `${products.length} items`}</StorefrontInfoPill>
-          {query.category ? <StorefrontInfoPill>{query.category}</StorefrontInfoPill> : null}
-          {query.sort ? <StorefrontInfoPill>{query.sort}</StorefrontInfoPill> : null}
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {copy.serviceLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-[1.35rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-4 ring-1 ring-[rgba(241,225,230,0.95)] transition hover:-translate-y-0.5"
+                >
+                  <p className="text-sm font-semibold text-[#2f2b32]">{item.label}</p>
+                  <p className="mt-2 text-sm leading-7 text-[#6d6670]">{item.description}</p>
+                </Link>
+              ))}
+            </div>
+          </StorefrontPanel>
         </div>
 
-        {products.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {products.map((product, index) => (
-              <ProductCard key={product.id} product={product} locale={locale} priority={index < 4} />
-            ))}
-          </div>
-        ) : (
-          <StorefrontPanel className="p-10 text-center">
-            <p className="text-[2rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{dictionary.common.empty}</p>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#6d6670]">
-              {locale === "zh"
-                ? "试试换个关键词、分类或排序方式，让结果更接近你现在想看的商品。"
-                : "Try another keyword, category or sorting rule to bring the collection closer to what you want to browse right now."}
-            </p>
-          </StorefrontPanel>
-        )}
+        <StorefrontPanel className="p-6 text-sm leading-8 text-[#6d6670] sm:p-7">
+          <p>{copy.bottomNote}</p>
+        </StorefrontPanel>
       </Container>
     </div>
   );

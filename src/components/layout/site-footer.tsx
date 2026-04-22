@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AtSign, ChevronDown, Globe, Music4, PlayCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { adminHref } from "@/lib/admin-i18n";
 import type { Locale } from "@/lib/i18n";
 import { Container } from "@/components/ui/container";
@@ -78,12 +78,16 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           rights: "© 2026 Northstar Atelier. All rights reserved.",
         };
 
-  const socialLinks = [
-    { href: "#", icon: <AtSign className="h-4 w-4" />, label: "Instagram" },
-    { href: "#", icon: <Globe className="h-4 w-4" />, label: "Facebook" },
-    { href: "#", icon: <PlayCircle className="h-4 w-4" />, label: "YouTube" },
-    { href: "#", icon: <Music4 className="h-4 w-4" />, label: "TikTok" },
-  ];
+  const supportLinks =
+    locale === "zh"
+      ? [
+          { href: `/${locale}/contact`, label: "联系支持" },
+          { href: `/${locale}/faq`, label: "购物帮助" },
+        ]
+      : [
+          { href: `/${locale}/contact`, label: "Contact support" },
+          { href: `/${locale}/faq`, label: "Shopping help" },
+        ];
 
   const payments = ["Visa", "Mastercard", "PayPal", "Apple Pay", "G Pay"];
   const footerSections = [
@@ -112,15 +116,14 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             ))}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            {socialLinks.map((item) => (
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            {supportLinks.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                aria-label={item.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fff5f7] text-[#4a444c] shadow-[0_14px_28px_-24px_rgba(201,176,187,0.8)] ring-1 ring-[rgba(241,225,230,0.9)] transition hover:text-[#ff6d88]"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[13px] font-medium text-[#4d4650] ring-1 ring-[rgba(241,225,230,0.95)] transition hover:text-[#ff6d88]"
               >
-                {item.icon}
+                {item.label}
               </Link>
             ))}
           </div>
@@ -172,15 +175,14 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <p className="font-serif text-[3rem] leading-none tracking-[-0.04em] text-[#2f2b32]">Northstar</p>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.28em] text-[#8b838d]">{content.tagline}</p>
           <p className="mt-6 max-w-sm text-[15px] leading-7 text-[#6d6670]">{content.brandDescription}</p>
-          <div className="mt-6 flex gap-3">
-            {socialLinks.map((item) => (
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {supportLinks.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                aria-label={item.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fff5f7] text-[#4a444c] shadow-[0_14px_28px_-24px_rgba(201,176,187,0.8)] ring-1 ring-[rgba(241,225,230,0.9)] transition hover:text-[#ff6d88]"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-white px-4 text-[13px] font-medium text-[#4d4650] ring-1 ring-[rgba(241,225,230,0.95)] transition hover:text-[#ff6d88]"
               >
-                {item.icon}
+                {item.label}
               </Link>
             ))}
           </div>

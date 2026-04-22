@@ -94,8 +94,8 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
 
   return (
     <>
-      <div className="space-y-3 sm:space-y-4">
-        <div className="grid justify-items-center gap-3 sm:justify-items-stretch sm:gap-4 lg:grid-cols-[88px_minmax(0,1fr)] lg:items-start xl:grid-cols-[96px_minmax(0,1fr)]">
+      <div className="space-y-3 overflow-x-hidden sm:space-y-4">
+        <div className="grid justify-items-center gap-3 overflow-x-hidden sm:justify-items-stretch sm:gap-4 lg:grid-cols-[88px_minmax(0,1fr)] lg:items-start xl:grid-cols-[96px_minmax(0,1fr)]">
           {canLoop ? (
             <div className="hidden lg:flex lg:max-h-[44rem] lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
               {images.map((image, index) => (
@@ -125,7 +125,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
             </div>
           ) : null}
 
-          <div className="relative w-[19rem] max-w-full justify-self-center overflow-hidden rounded-[1.8rem] border border-[rgba(241,225,230,0.95)] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] shadow-[0_28px_70px_-46px_rgba(29,22,18,0.42)] sm:w-full sm:max-w-none sm:rounded-[2.15rem]">
+          <div className="relative w-[17rem] max-w-full justify-self-center overflow-hidden rounded-[1.8rem] border border-[rgba(241,225,230,0.95)] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] shadow-[0_28px_70px_-46px_rgba(29,22,18,0.42)] sm:w-full sm:max-w-none sm:rounded-[2.15rem]">
             <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5 lg:px-8">
               <div className="rounded-full border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.78)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8f8791] backdrop-blur-xl sm:text-[11px] sm:tracking-[0.24em]">
                 {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
@@ -193,7 +193,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
               </p>
             </div>
 
-            <div className="hidden gap-3 border-t border-[rgba(241,225,230,0.95)] bg-[#fff8fa]/90 px-4 py-4 sm:grid sm:grid-cols-3 sm:px-6 lg:px-7">
+            <div className="hidden gap-3 border-t border-[rgba(241,225,230,0.95)] bg-[#fff8fa]/90 px-4 py-4 md:grid md:grid-cols-3 md:px-6 lg:px-7">
               <div className="rounded-[1.35rem] border border-[rgba(241,225,230,0.95)] bg-white/80 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#ff7e95]">{copy.detailShots}</p>
                 <p className="mt-2 text-sm leading-7 text-[#6d6670]">{copy.detailShotsText}</p>
@@ -211,7 +211,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
         </div>
 
         {canLoop ? (
-          <div className="mx-auto w-full max-w-[19rem] rounded-[1.45rem] border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.94)] p-2.5 shadow-[0_24px_60px_-46px_rgba(29,22,18,0.42)] backdrop-blur-xl sm:max-w-none sm:p-3 lg:hidden">
+          <div className="mx-auto w-full max-w-[17rem] overflow-hidden rounded-[1.45rem] border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.94)] p-2.5 shadow-[0_24px_60px_-46px_rgba(29,22,18,0.42)] backdrop-blur-xl sm:max-w-none sm:p-3 lg:hidden">
             <div className="flex gap-2.5 overflow-x-auto pb-1 sm:gap-3">
               {images.map((image, index) => (
                 <button

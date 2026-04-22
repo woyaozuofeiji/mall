@@ -2,7 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { Category, LocalizedText, Product, ProductImage, ProductSpec } from "@/lib/types";
+import { rewriteImportAssetUrl } from "@/lib/import-media";
+import type { Category, LocalizedText, Product, ProductImage, ProductReview, ProductSpec } from "@/lib/types";
 
 const productWithRelations = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: {
@@ -23,6 +24,15 @@ type ProductWithRelations = Prisma.ProductGetPayload<typeof productWithRelations
 
 type ShopSort = "featured" | "newest" | "price_low" | "price_high";
 
+type ShopPagination = {
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+};
+
 type ProductSpecRecord = {
   labelEn?: string;
   labelZh?: string;
@@ -37,7 +47,59 @@ type ProductSourcePayload = {
     rating?: number;
     count?: number;
   };
+  reviews?: Array<{
+    id?: string;
+    title?: string;
+    author?: string;
+    content?: string;
+    rating?: number;
+    date?: string;
+    verified?: boolean;
+  }>;
+  raw?: {
+    product?: {
+      reviews?: Array<{
+        id?: string;
+        title?: string;
+        author?: string;
+        content?: string;
+        rating?: number;
+        timestamp?: string;
+        is_verified?: boolean;
+      }>;
+    };
+  };
 };
+
+function parseReviewItems(sourcePayload: ProductSourcePayload): ProductReview[] {
+  const sourceReviews = Array.isArray(sourcePayload.reviews)
+    ? sourcePayload.reviews
+    : Array.isArray(sourcePayload.raw?.product?.reviews)
+      ? sourcePayload.raw.product.reviews.map((review) => ({
+          id: review.id,
+          title: review.title,
+          author: review.author,
+          content: review.content,
+          rating: review.rating,
+          date: review.timestamp,
+          verified: review.is_verified,
+        }))
+      : [];
+
+  return sourceReviews
+    .filter((review) => typeof review === "object" && review !== null)
+    .map((review, index) => ({
+      id: review.id ?? `review-${index + 1}`,
+      title: review.title ? localized(review.title, review.title) : undefined,
+      author: review.author?.trim() || "Verified customer",
+      content: localized(review.content, review.content),
+      rating: typeof review.rating === "number" ? review.rating : 5,
+      date: review.date?.replace(/^Reviewed in .*? on /i, "").replace(/^Reviewed in .*? /i, "").trim() || undefined,
+      verified: review.verified,
+    }))
+    .filter((review) => Boolean(review.content.en || review.content.zh))
+    .slice(0, 6);
+}
 
 function localized(en?: string | null, zh?: string | null): LocalizedText {
   return {
@@ -88,7 +150,7 @@ function mapCategory(record: {
 
 function mapProductImages(record: ProductWithRelations): ProductImage[] {
   const images = record.images.map((image, index) => ({
-    url: image.url,
+    url: rewriteImportAssetUrl(image.url),
     alt: localized(image.altEn, image.altZh),
     isCover: image.isCover,
     sortOrder: image.sortOrder ?? index,
@@ -143,6 +205,7 @@ function mapProduct(record: ProductWithRelations): Product {
           count: Number(sourcePayload.reviewSummary.count),
         }
       : undefined,
+    reviews: parseReviewItems(sourcePayload),
   };
 }
 
@@ -218,19 +281,22 @@ export async function getCategoryBySlug(slug: string) {
   return mapCategory(record);
 }
 
-export async function getHomepageProducts() {
+export async function getHomepageProducts(input?: { featuredTake?: number; latestTake?: number }) {
+  const featuredTake = input?.featuredTake ?? 4;
+  const latestTake = input?.latestTake ?? 3;
+
   const [featured, latest] = await Promise.all([
     prisma.product.findMany({
       where: { status: "PUBLISHED", featured: true },
       include: productWithRelations.include,
       orderBy: [{ createdAt: "desc" }],
-      take: 4,
+      take: featuredTake,
     }),
     prisma.product.findMany({
       where: { status: "PUBLISHED", isNew: true },
       include: productWithRelations.include,
       orderBy: [{ createdAt: "desc" }],
-      take: 3,
+      take: latestTake,
     }),
   ]);
 
@@ -240,20 +306,69 @@ export async function getHomepageProducts() {
   };
 }
 
-export async function getShopProducts(input?: { category?: string; q?: string; sort?: ShopSort }) {
+export async function getShopProducts(input?: { category?: string; q?: string; sort?: ShopSort; page?: number; pageSize?: number }) {
   const sort = input?.sort ?? "featured";
-  const [categories, products] = await Promise.all([
-    getCatalogCategories(),
-    prisma.product.findMany({
-      where: buildPublishedProductWhere(input),
-      include: productWithRelations.include,
-      orderBy: buildSort(sort),
+  const requestedPage = typeof input?.page === "number" && Number.isFinite(input.page) ? Math.max(1, Math.floor(input.page)) : 1;
+  const requestedPageSize = typeof input?.pageSize === "number" && Number.isFinite(input.pageSize) ? Math.max(1, Math.floor(input.pageSize)) : undefined;
+  const where = buildPublishedProductWhere(input);
+  const categoriesPromise = getCatalogCategories();
+
+  if (!requestedPageSize) {
+    const [categories, products] = await Promise.all([
+      categoriesPromise,
+      prisma.product.findMany({
+        where,
+        include: productWithRelations.include,
+        orderBy: buildSort(sort),
+      }),
+    ]);
+
+    const pagination: ShopPagination = {
+      totalCount: products.length,
+      pageSize: products.length > 0 ? products.length : 1,
+      currentPage: 1,
+      totalPages: products.length > 0 ? 1 : 0,
+      hasPrevPage: false,
+      hasNextPage: false,
+    };
+
+    return {
+      categories,
+      products: products.map(mapProduct),
+      pagination,
+    };
+  }
+
+  const [categories, totalCount] = await Promise.all([
+    categoriesPromise,
+    prisma.product.count({
+      where,
     }),
   ]);
+
+  const totalPages = totalCount > 0 ? Math.ceil(totalCount / requestedPageSize) : 0;
+  const currentPage = totalPages > 0 ? Math.min(requestedPage, totalPages) : 1;
+  const products = await prisma.product.findMany({
+    where,
+    include: productWithRelations.include,
+    orderBy: buildSort(sort),
+    skip: totalPages > 0 ? (currentPage - 1) * requestedPageSize : 0,
+    take: requestedPageSize,
+  });
+
+  const pagination: ShopPagination = {
+    totalCount,
+    pageSize: requestedPageSize,
+    currentPage,
+    totalPages,
+    hasPrevPage: currentPage > 1,
+    hasNextPage: totalPages > 0 && currentPage < totalPages,
+  };
 
   return {
     categories,
     products: products.map(mapProduct),
+    pagination,
   };
 }
 

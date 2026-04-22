@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getDictionary, isLocale } from '@/lib/i18n';
 import { buildPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { Container } from '@/components/ui/container';
@@ -12,14 +13,34 @@ const faqs = {
         'Orders can be completed with credit card or PayPal. Once payment is recorded, the order immediately moves into confirmation and fulfillment.',
     },
     {
+      question: 'How long does order processing take?',
+      answer:
+        'Most in-stock orders are packed and dispatched within 1-3 business days. Pre-order or holiday-volume items may take longer, and any extended handling window will be shown on the product page when relevant.',
+    },
+    {
+      question: 'Which countries do you ship to?',
+      answer:
+        'The storefront currently supports the United States, Canada, the United Kingdom, major EU destinations, Australia, New Zealand and selected Asian markets. Final availability is confirmed after your delivery address is entered at checkout.',
+    },
+    {
+      question: 'How can I track my shipment?',
+      answer:
+        'After dispatch, the carrier and tracking number are attached to your order. You can check the latest shipping status from the order tracking page using your order number and checkout email.',
+    },
+    {
+      question: 'Do you accept returns?',
+      answer:
+        'Most standard items can be requested for return within 30 days after delivery if they remain unused and in their original condition. Earrings, personalized items and clearly marked final-sale products are usually non-returnable unless there is a verified issue.',
+    },
+    {
+      question: 'What should I do if my item arrives damaged or incorrect?',
+      answer:
+        'Please contact support within 72 hours of delivery and include your order number plus clear photos of the item, packaging and shipping label. After review, we will arrange a replacement, reshipment or refund solution.',
+    },
+    {
       question: 'How are products selected?',
       answer:
         'The catalog is kept intentionally curated through sourcing review, product cleanup and selective publishing, so the storefront stays premium instead of crowded.',
-    },
-    {
-      question: 'How are orders fulfilled?',
-      answer:
-        'After payment, the order enters confirmation and preparation. Carrier and tracking details appear on the tracking page once the shipment is dispatched.',
     },
     {
       question: 'Why keep the assortment focused?',
@@ -33,12 +54,28 @@ const faqs = {
       answer: '当前订单支持信用卡与 PayPal 付款，支付成功后系统会立即更新订单状态。',
     },
     {
-      question: '商品是怎么选出来的？',
-      answer: '商品库会经过选品、整理和发布审核，保持精品化陈列，而不是一次性堆满大量 SKU。',
+      question: '订单一般多久发出？',
+      answer: '大多数现货订单会在付款确认后的 1-3 个工作日内完成包装并发出；如遇预售款或节日高峰，商品页会单独说明更长的处理时间。',
     },
     {
-      question: '订单是怎么履约的？',
-      answer: '订单付款后会进入确认与备货流程，发货后可在订单查询页查看承运商与运单号。',
+      question: '支持配送到哪些国家或地区？',
+      answer: '当前主要支持美国、加拿大、英国、欧盟主要国家、澳大利亚、新西兰以及部分亚洲地区，最终是否可配送以下单页地址校验结果为准。',
+    },
+    {
+      question: '如何查询物流进度？',
+      answer: '订单发货后会同步承运商和运单号，你可以使用订单号和下单邮箱在订单查询页查看最新物流状态。',
+    },
+    {
+      question: '支持退货吗？',
+      answer: '大多数标准商品在签收后 30 天内可申请退货，但耳饰、个性化定制商品和明确标注为最终销售的商品，除质量问题外通常不支持无理由退货。',
+    },
+    {
+      question: '如果收到破损或错发商品怎么办？',
+      answer: '请尽量在签收后 72 小时内联系客户支持，并附上订单号、商品照片、外包装照片和物流标签。客服核实后会安排补发、换货或退款处理。',
+    },
+    {
+      question: '商品是怎么选出来的？',
+      answer: '商品库会经过选品、整理和发布审核，保持精品化陈列，而不是一次性堆满大量 SKU。',
     },
     {
       question: '为什么商品数量保持精选？',
@@ -110,6 +147,23 @@ export default async function FaqPage({ params }: { params: Promise<{ locale: st
       />
 
       <Container className='grid gap-4'>
+        <StorefrontPanel className='p-5 sm:p-6'>
+          <div className='grid gap-3 grid-cols-2 sm:grid-cols-3'>
+            <Link className='rounded-[1.25rem] bg-[#fff8fa] px-4 py-4 text-sm leading-7 text-[#2f2b32] ring-1 ring-[rgba(241,225,230,0.95)] transition hover:text-[#ff6d88]' href={`/${locale}/policies/shipping`}>
+              <p className='text-[11px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]'>{locale === 'zh' ? '配送政策' : 'Shipping policy'}</p>
+              <p className='mt-2'>{locale === 'zh' ? '查看处理时间、配送地区与税费说明。' : 'Review processing time, delivery regions and tax notes.'}</p>
+            </Link>
+            <Link className='rounded-[1.25rem] bg-[#fff8fa] px-4 py-4 text-sm leading-7 text-[#2f2b32] ring-1 ring-[rgba(241,225,230,0.95)] transition hover:text-[#ff6d88]' href={`/${locale}/policies/returns`}>
+              <p className='text-[11px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]'>{locale === 'zh' ? '退换政策' : 'Returns policy'}</p>
+              <p className='mt-2'>{locale === 'zh' ? '查看退货时限、退款节奏与售后条件。' : 'See return windows, refund timing and after-sales conditions.'}</p>
+            </Link>
+            <Link className='col-span-2 rounded-[1.25rem] bg-[#fff8fa] px-4 py-4 text-sm leading-7 text-[#2f2b32] ring-1 ring-[rgba(241,225,230,0.95)] transition hover:text-[#ff6d88] sm:col-span-1' href={`/${locale}/contact`}>
+              <p className='text-[11px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]'>{locale === 'zh' ? '联系支持' : 'Contact support'}</p>
+              <p className='mt-2'>{locale === 'zh' ? '如果需要人工帮助，可直接进入联系页面。' : 'If you still need manual help, continue to the contact page.'}</p>
+            </Link>
+          </div>
+        </StorefrontPanel>
+
         {faqs[locale].map((faq, index) => (
           <StorefrontPanel key={faq.question} className='p-6 sm:p-7'>
             <div className='flex items-start gap-4'>

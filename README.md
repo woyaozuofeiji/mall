@@ -42,9 +42,9 @@
 ### 1.2 后台能力
 
 - 后台首页
-- 商品列表 / 新建 / 编辑
-- 订单列表 / 订单详情 / 状态更新 / 运单录入
-- 导入中心
+- 商品列表 / 新建 / 编辑 / 批量删除
+- 订单列表 / 订单详情 / 状态更新 / 运单录入 / 批量删除
+- 导入中心（示例导入 + Amazon 榜单采集 + 批次发布）
 - 内容页与设置页的后台壳子页面
 - 管理员邮箱密码登录
 - HttpOnly Cookie 会话
@@ -62,6 +62,9 @@
 - 后台当前已接入**管理员邮箱 + 密码登录**
 - 默认公开后台入口为 **`/console/login`**
 - 旧的 `/admin` 路径会跳转到新的公开后台路径
+- 商品批量删除时，如果商品已被订单引用，不会物理删除，而是自动归档
+- 订单支持后台批量删除，同时会清理关联订单项、物流记录和孤立地址
+- 导入中心支持批次重发布、删除源数据，以及导入媒体的按引用清理
 
 ---
 
@@ -213,6 +216,10 @@ NEXT_PUBLIC_ADMIN_PATH="/console"
 ADMIN_SESSION_SECRET="change-this-admin-session-secret"
 ADMIN_EMAIL="admin@northstaratelier.com"
 ADMIN_PASSWORD="change-this-admin-password"
+OXYLABS_USERNAME=""
+OXYLABS_PASSWORD=""
+OXYLABS_REALTIME_URL="https://realtime.oxylabs.io/v1/queries"
+AMAZON_IMPORT_CRON_SECRET="change-this-cron-secret"
 ```
 
 ### 变量说明
@@ -275,6 +282,26 @@ NEXT_PUBLIC_ADMIN_PATH="/console"
 
 默认管理员密码。  
 如果数据库里还没有管理员，且该变量已正确配置，系统支持首次登录时自动创建管理员。
+
+#### `OXYLABS_USERNAME` / `OXYLABS_PASSWORD`
+
+Amazon 榜单采集所需的 Oxylabs 凭证。  
+如果不配置，这部分导入能力无法使用。
+
+#### `OXYLABS_REALTIME_URL`
+
+Oxylabs Realtime API 地址。默认值为：
+
+```env
+OXYLABS_REALTIME_URL="https://realtime.oxylabs.io/v1/queries"
+```
+
+通常不需要改，除非你有自定义代理或特殊接入方式。
+
+#### `AMAZON_IMPORT_CRON_SECRET`
+
+Amazon 定时采集接口的共享密钥。  
+调用 `/api/admin/imports/amazon/cron` 时需要通过 `Authorization: Bearer ...` 或 `x-cron-secret` 传入。
 
 ---
 
@@ -450,6 +477,12 @@ npm run db:studio
 
 打开 Prisma Studio。
 
+```bash
+npm run db:repair-storefront
+```
+
+把当前数据库中的种子商品 / 历史导入商品重新整理为当前 storefront 所需的展示结构，用于本地修复或数据回填。
+
 ---
 
 ## 8. 推荐的首次启动流程
@@ -614,14 +647,95 @@ http://localhost:30000/en/order-tracking?order=NSA-20260419-Z9X8&email=mia@examp
 当前导入逻辑支持：
 
 1. 从外部商品源抓取示例商品
-2. 生成导入批次
-3. 把导入批次发布为站内商品
+2. 从 `Amazon Best Sellers` 类目榜单采集候选商品
+3. 生成导入批次与导入项
+4. 把导入批次发布为站内商品
+5. 已发布批次支持重复发布
+6. 支持删除导入批次及其原始源数据
 
 目前示例导入依赖：
 
 - `https://dummyjson.com`
 
 如果服务器不能访问外网，点击“导入示例数据”时可能失败。
+
+### 11.1 示例导入
+
+点击后台里的“导入示例数据”后，系统会：
+
+1. 从 `dummyjson.com` 拉取示例商品
+2. 规范化为本地商品结构
+3. 写入 `ImportBatch / ImportItem`
+4. 由后台进一步发布到正式商品库
+
+### 11.2 Amazon 爆品导入（Oxylabs）
+
+后台导入页现在支持通过 `Oxylabs Web Scraper API` 直接采集 `Amazon Best Sellers` 类目榜单，并按以下流程落地：
+
+- 按 `browse node ID` 抓取类目候选商品
+- 按评分、评论数、价格区间、Prime 条件筛选
+- 拉取商品详情与报价列表（可选）
+- 将商品图下载到导入媒体目录
+- 通过 `/api/media/imports/*` 提供图片访问，并兼容旧的 `public/imports/*` 目录
+- 生成 `ImportBatch / ImportItem`
+- 可选择导入后自动发布
+- 发布时支持保留原分类，或在满足约束时覆盖到指定本地分类
+
+需要的环境变量：
+
+```env
+OXYLABS_USERNAME="your-username"
+OXYLABS_PASSWORD="your-password"
+AMAZON_IMPORT_CRON_SECRET="your-random-secret"
+```
+
+### 11.3 导入批次操作
+
+每个导入批次当前支持：
+
+- **发布批次**：把已通过审核的导入项生成或更新到正式商品库
+- **重复发布**：对于已发布过的批次再次执行发布，同步最新规范化结果
+- **删除数据源**：删除当前批次与原始导入数据，但保留已经发布到商品库中的商品
+
+当删除批次时，系统会进一步检查导入媒体目录：
+
+- 如果某目录仍被其他导入项或正式商品引用，则保留
+- 如果该目录已经完全失去引用，则自动清理本地导入媒体目录
+
+### 11.4 Amazon 定时采集接口
+
+```http
+POST /api/admin/imports/amazon/cron
+Authorization: Bearer <AMAZON_IMPORT_CRON_SECRET>
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "jobs": [
+    {
+      "jobName": "Jewelry top 10",
+      "domain": "com",
+      "browseNodeId": "389823011",
+      "localCategoryId": "<your-category-id>",
+      "geoLocation": "90210",
+      "targetCount": 10,
+      "candidatePoolSize": 24,
+      "maxPages": 2,
+      "minRating": 4.2,
+      "minReviews": 300,
+      "onlyPrime": false,
+      "includePricing": true,
+      "downloadImages": true,
+      "autoPublish": false,
+      "featuredTopN": 3,
+      "customTagText": "amazon,bestseller"
+    }
+  ]
+}
+```
 
 ---
 
@@ -717,12 +831,16 @@ ADMIN_PASSWORD="your-strong-password"
 
 ### 13.4 后台 API 保护
 
-这些接口现在都需要登录后才能访问：
+以下接口需要**后台登录后**才能访问：
 
 - `/api/admin/products`
 - `/api/admin/products/[id]`
+- `/api/admin/products/batch-delete`
 - `/api/admin/orders/[id]`
+- `/api/admin/orders/batch-delete`
 - `/api/admin/imports/sample`
+- `/api/admin/imports/[id]`
+- `/api/admin/imports/amazon`
 - `/api/admin/imports/[id]/publish`
 
 未登录时会返回：
@@ -730,6 +848,12 @@ ADMIN_PASSWORD="your-strong-password"
 ```http
 401 Unauthorized
 ```
+
+另外，定时采集接口：
+
+- `/api/admin/imports/amazon/cron`
+
+不走后台登录态，而是要求请求头里携带 `AMAZON_IMPORT_CRON_SECRET`。
 
 ---
 
@@ -900,6 +1024,8 @@ mall/
 ├── docs/                         # 项目文档
 ├── prisma/                       # Prisma schema 与 seed
 ├── public/                       # 静态资源
+├── scripts/                      # 数据修复 / 辅助脚本
+├── storage/                      # 导入媒体等运行期存储目录
 ├── src/
 │   ├── app/                      # Next.js App Router 页面与 API
 │   ├── components/               # 业务组件
@@ -945,9 +1071,16 @@ mall/
 - `src/lib/admin-auth.ts`
 - `src/lib/admin-path.ts`
 - `src/lib/admin-crypto.ts`
+- `src/lib/orders.ts`
 - `src/lib/imports.ts`
+- `src/lib/amazon-imports.ts`
+- `src/lib/import-media.ts`
+- `src/lib/oxylabs.ts`
 - `src/app/admin/actions.ts`
 - `src/components/admin/admin-login-form.tsx`
+- `src/components/admin/admin-products-list.tsx`
+- `src/components/admin/admin-orders-list.tsx`
+- `src/components/admin/amazon-import-form.tsx`
 - `src/proxy.ts`
 - `src/app/admin/*`
 

@@ -40,6 +40,35 @@ type ProductSpecRecord = {
   valueZh?: string;
 };
 
+export interface AdminProductListItem {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameZh: string;
+  category: string;
+  price: number;
+  status: Lowercase<ProductStatus>;
+  featured: boolean;
+  variantCount: number;
+  orderItemCount: number;
+  createdAt: string;
+}
+
+export interface AdminProductDeleteResult {
+  selectedCount: number;
+  deletedCount: number;
+  archivedCount: number;
+  notFoundCount: number;
+}
+
+function normalizeIds(ids: string[]) {
+  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+}
+
+function toLowerProductStatus(status: ProductStatus): Lowercase<ProductStatus> {
+  return status.toLowerCase() as Lowercase<ProductStatus>;
+}
+
 function slugify(input: string) {
   return input
     .toLowerCase()
@@ -195,6 +224,18 @@ async function syncProductRelations(tx: Prisma.TransactionClient, productId: str
 }
 
 function buildProductCoreData(payload: AdminProductPayload): Prisma.ProductUncheckedCreateInput {
+  const fallbackSourcePayload = {
+    source: "admin",
+    tags: payload.tags,
+    sku: payload.variants[0]?.labelEn ? `${payload.slug.toUpperCase().replace(/-/g, "_")}_PRIMARY` : undefined,
+    availabilityStatus: payload.status === "PUBLISHED" ? "In stock" : "Draft",
+    reviewSummary: {
+      rating: payload.featured ? 4.9 : 4.7,
+      count: payload.featured ? 38 : 12,
+    },
+    updatedAt: new Date().toISOString(),
+  };
+
   return {
     slug: payload.slug,
     categoryId: payload.categoryId,
@@ -223,17 +264,7 @@ function buildProductCoreData(payload: AdminProductPayload): Prisma.ProductUnche
         valueZh: spec.valueZh,
       })),
     },
-    sourcePayload: {
-      source: "admin",
-      tags: payload.tags,
-      sku: payload.variants[0]?.labelEn ? `${payload.slug.toUpperCase().replace(/-/g, "_")}_PRIMARY` : undefined,
-      availabilityStatus: payload.status === "PUBLISHED" ? "In stock" : "Draft",
-      reviewSummary: {
-        rating: payload.featured ? 4.9 : 4.7,
-        count: payload.featured ? 38 : 12,
-      },
-      updatedAt: new Date().toISOString(),
-    },
+    sourcePayload: (payload.sourcePayload ?? fallbackSourcePayload) as Prisma.InputJsonValue,
   };
 }
 
@@ -257,21 +288,27 @@ export async function getAdminProducts() {
   const products = await prisma.product.findMany({
     include: {
       category: true,
-      variants: true,
+      _count: {
+        select: {
+          variants: true,
+          orderItems: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return products.map((product) => ({
+  return products.map<AdminProductListItem>((product) => ({
     id: product.id,
     slug: product.slug,
     nameEn: product.nameEn,
     nameZh: product.nameZh,
     category: product.category.nameEn,
     price: Number(product.price),
-    status: product.status.toLowerCase(),
+    status: toLowerProductStatus(product.status),
     featured: product.featured,
-    variantCount: product.variants.length,
+    variantCount: product._count.variants,
+    orderItemCount: product._count.orderItems,
     createdAt: product.createdAt.toISOString(),
   }));
 }
@@ -389,34 +426,60 @@ export async function updateAdminProduct(id: string, payload: AdminProductPayloa
 }
 
 export async function archiveOrDeleteAdminProduct(id: string) {
-  const record = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      orderItems: {
-        select: { id: true },
+  const result = await archiveOrDeleteAdminProducts([id]);
+  if (result.archivedCount > 0) {
+    return { mode: "archived" as const };
+  }
+  if (result.deletedCount > 0) {
+    return { mode: "deleted" as const };
+  }
+  throw new Error("商品不存在");
+}
+
+export async function archiveOrDeleteAdminProducts(ids: string[]): Promise<AdminProductDeleteResult> {
+  const normalizedIds = normalizeIds(ids);
+  if (normalizedIds.length === 0) {
+    throw new Error("请先选择要删除的商品");
+  }
+
+  const records = await prisma.product.findMany({
+    where: { id: { in: normalizedIds } },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          orderItems: true,
+        },
       },
     },
   });
 
-  if (!record) {
+  if (records.length === 0) {
     throw new Error("商品不存在");
   }
 
-  if (record.orderItems.length > 0) {
-    await prisma.product.update({
-      where: { id },
-      data: { status: ProductStatus.ARCHIVED },
-    });
-
-    return { mode: "archived" as const };
-  }
+  const archivedIds = records.filter((record) => record._count.orderItems > 0).map((record) => record.id);
+  const deletedIds = records.filter((record) => record._count.orderItems === 0).map((record) => record.id);
 
   await prisma.$transaction(async (tx) => {
-    await tx.productTag.deleteMany({ where: { productId: id } });
-    await tx.productVariant.deleteMany({ where: { productId: id } });
-    await tx.productImage.deleteMany({ where: { productId: id } });
-    await tx.product.delete({ where: { id } });
+    if (archivedIds.length > 0) {
+      await tx.product.updateMany({
+        where: { id: { in: archivedIds } },
+        data: { status: ProductStatus.ARCHIVED },
+      });
+    }
+
+    if (deletedIds.length > 0) {
+      await tx.product.deleteMany({
+        where: { id: { in: deletedIds } },
+      });
+    }
   });
 
-  return { mode: "deleted" as const };
+  return {
+    selectedCount: normalizedIds.length,
+    deletedCount: deletedIds.length,
+    archivedCount: archivedIds.length,
+    notFoundCount: normalizedIds.length - records.length,
+  };
 }

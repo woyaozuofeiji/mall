@@ -97,7 +97,7 @@ export const zh: SiteDictionary = {
   },
   content: {
     contactTitle: '联系 Northstar Atelier',
-    contactDescription: '这里展示客户支持、社媒沟通与供应链协同等正式服务入口。',
+    contactDescription: '这里用于联系客户支持与运营协同入口，处理订单、配送、退换与商品咨询。',
     faqTitle: '常见问题',
     faqDescription: '这里用于说明支付、配送、包装、售后与订单状态查询等服务信息。',
   },

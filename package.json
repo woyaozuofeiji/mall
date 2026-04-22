@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "db:repair-storefront": "tsx scripts/repair-storefront.ts",
     "db:reset": "prisma db push --force-reset && prisma db seed",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
