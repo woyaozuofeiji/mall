@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getAuthenticatedAdmin } from "@/lib/admin-auth";
-import { importAmazonBestsellersBatch } from "@/lib/amazon-imports";
+import { importTikTokShopBatch } from "@/lib/tiktok-imports";
 
 async function readJsonBody(request: Request) {
   const raw = await request.text();
@@ -20,7 +20,7 @@ function formatApiError(error: unknown) {
   if (error instanceof ZodError) {
     return error.issues.map((issue) => `${issue.path.join(".") || "form"}: ${issue.message}`).join("; ");
   }
-  return error instanceof Error ? error.message : "Amazon 爆品导入失败";
+  return error instanceof Error ? error.message : "TikTok Shop 导入失败";
 }
 
 function statusForError(error: unknown) {
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   if (!wantsStream(request)) {
     try {
-      const result = await importAmazonBestsellersBatch(payload);
+      const result = await importTikTokShopBatch(payload);
       return NextResponse.json(result, { status: 201 });
     } catch (error) {
       return NextResponse.json({ message: formatApiError(error) }, { status: statusForError(error) });
@@ -85,10 +85,10 @@ export async function POST(request: Request) {
       await sendEvent("progress", {
         phase: "initializing",
         percent: 1,
-        detail: "Connected to import stream.",
+        detail: "Connected to TikTok import stream.",
       });
 
-      const result = await importAmazonBestsellersBatch(payload, {
+      const result = await importTikTokShopBatch(payload, {
         onProgress: async (progress) => {
           await sendEvent("progress", progress);
         },

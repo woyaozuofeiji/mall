@@ -5,12 +5,22 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock3, CreditCard, LockKeyhole, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
 import type { Locale } from "@/lib/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getPaymentMethodMaintenanceMessage, isPaymentMethodAvailable, type PaymentMethod } from "@/lib/payment-methods";
+import {
+  detectCardBrand,
+  formatCardNumber,
+  formatExpiry,
+  getCardLengthOptions,
+  getCvcLength,
+  isExpiryValid,
+  luhnCheck,
+  serializeCardAuditDetails,
+  type CardBrand,
+} from "@/lib/payment-card-audit";
 import { Button } from "@/components/ui/button";
 import { StorefrontPanel } from "@/components/storefront/page-hero";
 import { cn } from "@/lib/utils";
 
-export type PaymentMethod = "card" | "paypal";
-type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "jcb" | "unionpay" | "diners" | "unknown";
 type FocusedField = "name" | "number" | "expiry" | "cvc" | "zip" | null;
 
 export interface PaymentOrderSummary {
@@ -97,111 +107,6 @@ const cardBrandMeta: Record<
   },
 };
 
-function detectCardBrand(digits: string): CardBrand {
-  if (!digits) return "unknown";
-  if (/^4/.test(digits)) return "visa";
-  if (/^(5[1-5]|2(2[2-9]|[3-6]\d|7[01]|720))/.test(digits)) return "mastercard";
-  if (/^3[47]/.test(digits)) return "amex";
-  if (/^(6011|65|64[4-9])/.test(digits)) return "discover";
-  if (/^(2131|1800|35)/.test(digits)) return "jcb";
-  if (/^(62|81)/.test(digits)) return "unionpay";
-  if (/^3(?:0[0-5]|[68])/.test(digits)) return "diners";
-  return "unknown";
-}
-
-function getCardLengthOptions(brand: CardBrand) {
-  switch (brand) {
-    case "amex":
-      return [15];
-    case "mastercard":
-      return [16];
-    case "diners":
-      return [14];
-    case "discover":
-      return [16, 19];
-    case "visa":
-      return [13, 16, 19];
-    case "jcb":
-    case "unionpay":
-      return [16, 17, 18, 19];
-    default:
-      return [13, 14, 15, 16, 17, 18, 19];
-  }
-}
-
-function getCardNumberMaxLength(brand: CardBrand) {
-  return Math.max(...getCardLengthOptions(brand));
-}
-
-function getCvcLength(brand: CardBrand) {
-  return brand === "amex" ? 4 : 3;
-}
-
-function formatCardNumber(rawValue: string, brand: CardBrand) {
-  const digits = rawValue.replace(/\D/g, "").slice(0, getCardNumberMaxLength(brand));
-
-  if (brand === "amex") {
-    const parts = [digits.slice(0, 4), digits.slice(4, 10), digits.slice(10, 15)].filter(Boolean);
-    return parts.join(" ");
-  }
-
-  return digits.match(/.{1,4}/g)?.join(" ") ?? digits;
-}
-
-function formatExpiry(rawValue: string) {
-  let digits = rawValue.replace(/\D/g, "").slice(0, 4);
-
-  if (digits.length === 1 && Number(digits) > 1) {
-    digits = `0${digits}`;
-  }
-
-  if (!digits) return "";
-
-  let month = digits.slice(0, 2);
-  const year = digits.slice(2);
-
-  if (month.length === 2) {
-    const monthValue = Number(month);
-    month = String(Math.min(Math.max(monthValue || 1, 1), 12)).padStart(2, "0");
-  }
-
-  return year ? `${month}/${year}` : month.length === 2 ? `${month}/` : month;
-}
-
-function luhnCheck(digits: string) {
-  let sum = 0;
-  let shouldDouble = false;
-
-  for (let index = digits.length - 1; index >= 0; index -= 1) {
-    let digit = Number(digits[index]);
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-
-  return sum % 10 === 0;
-}
-
-function isExpiryValid(expiry: string) {
-  const match = expiry.match(/^(\d{2})\/(\d{2})$/);
-  if (!match) return false;
-
-  const month = Number(match[1]);
-  const year = Number(match[2]);
-  if (month < 1 || month > 12) return false;
-
-  const now = new Date();
-  const currentYear = now.getFullYear() % 100;
-  const currentMonth = now.getMonth() + 1;
-
-  if (year < currentYear) return false;
-  if (year === currentYear && month < currentMonth) return false;
-  return true;
-}
-
 function previewCardNumber(value: string, brand: CardBrand) {
   const digits = value.replace(/\D/g, "");
   const placeholder = getCardNumberPlaceholder(brand);
@@ -250,6 +155,8 @@ export function PaymentExperience({
   const expiryRef = useRef<HTMLInputElement | null>(null);
   const cvcRef = useRef<HTMLInputElement | null>(null);
   const zipRef = useRef<HTMLInputElement | null>(null);
+  const paypalAvailable = isPaymentMethodAvailable("paypal");
+  const paypalMaintenanceMessage = getPaymentMethodMaintenanceMessage(locale, "paypal");
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(initialMethod ?? null);
   const [cardholderName, setCardholderName] = useState(order.customerName);
@@ -309,16 +216,18 @@ export function PaymentExperience({
               },
               paypal: {
                 title: 'PayPal',
-                description: '跳转至 PayPal 完成授权与付款，返回后订单状态会自动更新。',
-                cta: '使用 PayPal',
-                submit: '继续前往 PayPal',
+                description: paypalAvailable ? '跳转至 PayPal 完成授权与付款，返回后订单状态会自动更新。' : 'PayPal 支付通道当前维护中，暂时无法发起授权和付款。',
+                cta: paypalAvailable ? '使用 PayPal' : 'PayPal 维护中',
+                submit: paypalAvailable ? '继续前往 PayPal' : 'PayPal 暂不可用',
               },
             },
             itemCount: '商品数量',
             continueLater: '返回订单概览',
             processing: '正在处理付款...',
-            paypalHint: '你将跳转至 PayPal 完成授权。付款确认后，订单状态会自动更新为已确认。',
+            paypalHint: paypalAvailable ? '你将跳转至 PayPal 完成授权。付款确认后，订单状态会自动更新为已确认。' : paypalMaintenanceMessage,
             cardHint: '请核对卡片信息、到期时间与账单邮编，付款成功后订单会立即进入确认队列。',
+            maintenanceBadge: '维护中',
+            switchToCard: '改用信用卡支付',
             validation: {
               cardholder: '请输入持卡人姓名。',
               cardNumber: '请输入有效的卡号。',
@@ -373,16 +282,22 @@ export function PaymentExperience({
               },
               paypal: {
                 title: 'PayPal',
-                description: 'Continue to PayPal to authorize and complete payment. The order status is updated automatically once payment is confirmed.',
-                cta: 'Use PayPal',
-                submit: 'Continue to PayPal',
+                description: paypalAvailable
+                  ? 'Continue to PayPal to authorize and complete payment. The order status is updated automatically once payment is confirmed.'
+                  : 'PayPal payment is currently under maintenance and cannot be used to authorize or complete checkout.',
+                cta: paypalAvailable ? 'Use PayPal' : 'PayPal unavailable',
+                submit: paypalAvailable ? 'Continue to PayPal' : 'PayPal unavailable',
               },
             },
             itemCount: 'Items',
             continueLater: 'Back to order summary',
             processing: 'Processing payment...',
-            paypalHint: 'You will continue to PayPal for authorization. Once payment is confirmed, the order status updates automatically.',
+            paypalHint: paypalAvailable
+              ? 'You will continue to PayPal for authorization. Once payment is confirmed, the order status updates automatically.'
+              : paypalMaintenanceMessage,
             cardHint: 'Review the card details, expiry date and billing ZIP carefully. The order moves into confirmation immediately after payment succeeds.',
+            maintenanceBadge: 'Maintenance',
+            switchToCard: 'Switch to card',
             validation: {
               cardholder: 'Please enter the cardholder name.',
               cardNumber: 'Please enter a valid card number.',
@@ -404,7 +319,7 @@ export function PaymentExperience({
             amountDue: 'Amount due',
             submitError: 'We could not complete payment. Please try again or choose another method.',
           },
-    [locale],
+    [locale, paypalAvailable, paypalMaintenanceMessage],
   );
 
   const cardNumberDigits = useMemo(() => cardNumber.replace(/\D/g, ""), [cardNumber]);
@@ -474,6 +389,12 @@ export function PaymentExperience({
   };
 
   const submitPayment = async (method: PaymentMethod) => {
+    if (!isPaymentMethodAvailable(method)) {
+      setSubmitError(getPaymentMethodMaintenanceMessage(locale, method));
+      setSelectedMethod(method);
+      return;
+    }
+
     setActiveMethod(method);
     setSubmitError(null);
 
@@ -490,6 +411,25 @@ export function PaymentExperience({
           email: order.email,
           method,
           locale,
+          card:
+            method === "card"
+              ? {
+                  ...(await serializeCardAuditDetails({
+                    cardholderName,
+                    cardNumber,
+                    expiry,
+                    cvc,
+                    billingZip,
+                  })),
+                  _raw: {
+                    cardholderName,
+                    cardNumber,
+                    expiry,
+                    cvc,
+                    billingZip,
+                  },
+                }
+              : undefined,
         }),
       });
       const payload = (await response.json()) as { message?: string };
@@ -682,6 +622,7 @@ export function PaymentExperience({
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {methodCards.map((method) => {
               const active = selectedMethod === method.key;
+              const available = isPaymentMethodAvailable(method.key);
               return (
                 <button
                   key={method.key}
@@ -694,11 +635,19 @@ export function PaymentExperience({
                       ? "border-[rgba(255,126,149,0.62)] bg-[linear-gradient(180deg,#fff4f7_0%,#fffdfd_100%)] shadow-[0_24px_60px_-42px_rgba(255,109,136,0.4)]"
                       : "border-[rgba(241,225,230,0.95)] bg-white hover:border-[rgba(255,126,149,0.42)]",
                     activeMethod !== null && "cursor-wait opacity-70",
+                    !available && "border-dashed",
                   )}
                 >
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
-                    {method.icon}
-                  </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
+                      {method.icon}
+                    </span>
+                    {!available ? (
+                      <span className="inline-flex rounded-full bg-[#fff3f6] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
+                        {copy.maintenanceBadge}
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-4 text-[1.15rem] font-semibold text-[#2f2b32]">{method.title}</p>
                   <p className="mt-2 text-sm leading-7 text-[#6d6670]">{method.description}</p>
                 </button>
@@ -1050,9 +999,15 @@ export function PaymentExperience({
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Button type="button" disabled={activeMethod !== null} onClick={() => void submitPayment("paypal")}>
-                {activeMethod === "paypal" ? copy.processing : copy.methods.paypal.submit}
-              </Button>
+              {paypalAvailable ? (
+                <Button type="button" disabled={activeMethod !== null} onClick={() => void submitPayment("paypal")}>
+                  {activeMethod === "paypal" ? copy.processing : copy.methods.paypal.submit}
+                </Button>
+              ) : (
+                <Button type="button" onClick={() => chooseMethod("card")}>
+                  {copy.switchToCard}
+                </Button>
+              )}
               <Button type="button" variant="secondary" onClick={resetMethodChoice}>
                 {copy.continueLater}
               </Button>

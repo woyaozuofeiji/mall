@@ -3,11 +3,12 @@ import "server-only";
 import { Prisma, type OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
+import type { PaymentMethod } from "@/lib/payment-methods";
 import type { Locale } from "@/lib/types";
 import type { CheckoutPayload } from "@/lib/validation/checkout";
 import type { AdminOrderUpdatePayload } from "@/lib/validation/admin";
 
-export type OrderPaymentMethod = 'card' | 'paypal';
+export type OrderPaymentMethod = PaymentMethod;
 
 export interface OrderLookupResult {
   orderNumber: string;

@@ -26,8 +26,10 @@ interface OxylabsRealtimeResponse<TContent> {
 
 interface OxylabsRealtimeRequest {
   source: string;
-  query: string;
+  query?: string;
+  product_id?: string;
   domain?: string;
+  country?: string;
   geo_location?: string;
   locale?: string;
   start_page?: number;
@@ -35,6 +37,10 @@ interface OxylabsRealtimeRequest {
   parse?: boolean;
   render?: "html" | "png" | "jpeg";
   context?: OxylabsContextItem[];
+}
+
+interface OxylabsRequestOptions {
+  timeoutMs?: number;
 }
 
 export interface AmazonBestsellersItem {
@@ -127,20 +133,29 @@ function getOxylabsCredentials() {
   return { username, password };
 }
 
-async function oxylabsRequest<TContent>(payload: OxylabsRealtimeRequest) {
+async function oxylabsRequest<TContent>(payload: OxylabsRealtimeRequest, options: OxylabsRequestOptions = {}) {
   const { username, password } = getOxylabsCredentials();
   const authorization = Buffer.from(`${username}:${password}`).toString("base64");
+  const timeoutMs = options.timeoutMs ?? 60_000;
 
-  const response = await fetch(OXYLABS_REALTIME_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${authorization}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-    signal: AbortSignal.timeout(60_000),
-  });
+  let response: Response;
+  try {
+    response = await fetch(OXYLABS_REALTIME_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${authorization}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error instanceof Error && (error.name === "TimeoutError" || /aborted due to timeout/i.test(error.message))) {
+      throw new Error(`Oxylabs 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
+    }
+    throw error;
+  }
 
   const rawText = await response.text();
   const data = rawText ? (JSON.parse(rawText) as OxylabsRealtimeResponse<TContent>) : {};
@@ -224,4 +239,35 @@ export async function fetchAmazonPricing(input: {
     locale: input.locale,
     parse: true,
   });
+}
+
+export async function fetchTikTokShopSearchHtml(input: {
+  query: string;
+  country?: string;
+}) {
+  return oxylabsRequest<string>(
+    {
+      source: "tiktok_shop_search",
+      query: input.query,
+      country: input.country,
+      render: "html",
+    },
+    {
+      timeoutMs: 120_000,
+    },
+  );
+}
+
+export async function fetchTikTokShopProductHtml(input: {
+  productId: string;
+}) {
+  return oxylabsRequest<string>(
+    {
+      source: "tiktok_shop_product",
+      product_id: input.productId,
+    },
+    {
+      timeoutMs: 90_000,
+    },
+  );
 }

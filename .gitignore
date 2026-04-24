@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# runtime import media
+/public/imports/
+/storage/imports/
+/storage/audit/
+/storage/capture/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

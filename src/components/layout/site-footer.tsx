@@ -89,7 +89,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           { href: `/${locale}/faq`, label: "Shopping help" },
         ];
 
-  const payments = ["Visa", "Mastercard", "PayPal", "Apple Pay", "G Pay"];
+  const payments = ["Visa", "Mastercard", "Apple Pay", "G Pay"];
   const footerSections = [
     { title: content.shop, links: content.shopLinks, defaultOpen: true },
     { title: content.customer, links: content.customerLinks, defaultOpen: true },

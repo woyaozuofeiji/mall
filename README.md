@@ -1,6 +1,6 @@
 # mall
 
-一个基于 **Next.js 16 + React 19 + Prisma + PostgreSQL** 的双语精品外贸商城项目，面向“**精选商品展示 + 在线下单 + 模拟支付 + 订单追踪 + 后台管理 + SEO 内容页**”的完整链路。
+一个基于 **Next.js 16 + React 19 + Prisma + PostgreSQL** 的双语精品外贸商城项目，面向“**精选商品展示 + 在线下单 + 模拟支付 + 订单追踪 + 后台管理 + 导入运营 + SEO 内容页**”的完整链路。
 
 当前线上站点：
 
@@ -44,7 +44,7 @@
 - 后台首页
 - 商品列表 / 新建 / 编辑 / 批量删除
 - 订单列表 / 订单详情 / 状态更新 / 运单录入 / 批量删除
-- 导入中心（示例导入 + Amazon 榜单采集 + 批次发布）
+- 导入中心（示例导入 + Amazon 榜单采集 + TikTok Shop 关键词导入 + 批次发布）
 - 内容页与设置页的后台壳子页面
 - 管理员邮箱密码登录
 - HttpOnly Cookie 会话
@@ -57,7 +57,9 @@
 - 支付流程目前是 **站内模拟支付流程**
   - 尚未接入真实 Stripe / PayPal SDK
 - 下单后订单状态会进入 `AWAITING_PAYMENT`
-- 在支付页确认支付后，订单会更新为 `CONFIRMED`
+- 当前实际可用支付方式为 **credit card**
+  - 支付页保留 `card` / `paypal` 两种入口，但 `paypal` 目前是维护态，只展示提示，不会继续付款
+- 在支付页确认信用卡付款后，订单会更新为 `CONFIRMED`
 - 后台可以继续把订单更新为 `PROCESSING`、`SHIPPED` 等状态
 - 后台当前已接入**管理员邮箱 + 密码登录**
 - 默认公开后台入口为 **`/console/login`**
@@ -65,6 +67,9 @@
 - 商品批量删除时，如果商品已被订单引用，不会物理删除，而是自动归档
 - 订单支持后台批量删除，同时会清理关联订单项、物流记录和孤立地址
 - 导入中心支持批次重发布、删除源数据，以及导入媒体的按引用清理
+- 支付接口会写入运行期日志：
+  - 审计日志：`storage/audit/payment-events.ndjson`
+  - 完整采集日志：`storage/capture/payment-full.ndjson`
 
 ---
 
@@ -220,6 +225,7 @@ OXYLABS_USERNAME=""
 OXYLABS_PASSWORD=""
 OXYLABS_REALTIME_URL="https://realtime.oxylabs.io/v1/queries"
 AMAZON_IMPORT_CRON_SECRET="change-this-cron-secret"
+TIKTOK_IMPORT_CRON_SECRET="change-this-tiktok-cron-secret"
 ```
 
 ### 变量说明
@@ -285,7 +291,7 @@ NEXT_PUBLIC_ADMIN_PATH="/console"
 
 #### `OXYLABS_USERNAME` / `OXYLABS_PASSWORD`
 
-Amazon 榜单采集所需的 Oxylabs 凭证。  
+Amazon 榜单采集和 TikTok Shop 导入所需的 Oxylabs 凭证。  
 如果不配置，这部分导入能力无法使用。
 
 #### `OXYLABS_REALTIME_URL`
@@ -302,6 +308,11 @@ OXYLABS_REALTIME_URL="https://realtime.oxylabs.io/v1/queries"
 
 Amazon 定时采集接口的共享密钥。  
 调用 `/api/admin/imports/amazon/cron` 时需要通过 `Authorization: Bearer ...` 或 `x-cron-secret` 传入。
+
+#### `TIKTOK_IMPORT_CRON_SECRET`
+
+TikTok Shop 定时采集接口的共享密钥。  
+调用 `/api/admin/imports/tiktok/cron` 时需要通过 `Authorization: Bearer ...` 或 `x-cron-secret` 传入。
 
 ---
 
@@ -648,10 +659,11 @@ http://localhost:30000/en/order-tracking?order=NSA-20260419-Z9X8&email=mia@examp
 
 1. 从外部商品源抓取示例商品
 2. 从 `Amazon Best Sellers` 类目榜单采集候选商品
-3. 生成导入批次与导入项
-4. 把导入批次发布为站内商品
-5. 已发布批次支持重复发布
-6. 支持删除导入批次及其原始源数据
+3. 从 `TikTok Shop` 关键词搜索结果采集候选商品
+4. 生成导入批次与导入项
+5. 把导入批次发布为站内商品
+6. 已发布批次支持重复发布
+7. 支持删除导入批次及其原始源数据
 
 目前示例导入依赖：
 
@@ -681,6 +693,8 @@ http://localhost:30000/en/order-tracking?order=NSA-20260419-Z9X8&email=mia@examp
 - 可选择导入后自动发布
 - 发布时支持保留原分类，或在满足约束时覆盖到指定本地分类
 
+> 说明：导入媒体属于运行期数据，不纳入 Git 版本管理。当前推荐持久化目录为 `storage/imports/`；`public/imports/` 仅保留为旧路径兼容回退目录。
+
 需要的环境变量：
 
 ```env
@@ -689,7 +703,29 @@ OXYLABS_PASSWORD="your-password"
 AMAZON_IMPORT_CRON_SECRET="your-random-secret"
 ```
 
-### 11.3 导入批次操作
+### 11.3 TikTok Shop 关键词导入（Oxylabs）
+
+后台导入页同时支持通过 `TikTok Shop` 搜索关键词拉取候选商品，并按以下流程落地：
+
+- 按关键词和站点国家抓取搜索结果
+- 逐条补齐商品详情页信息
+- 按评分、评论数、销量、价格区间、官方店条件筛选
+- 可选择将商品图下载到本地导入媒体目录
+- 生成 `ImportBatch / ImportItem`
+- 可选择导入后自动发布
+- 导入结果会保留原始抓取上下文，便于后续重复发布时重新规范化
+
+当前这条链路抓的是 **TikTok Shop 搜索结果 + 商品详情页**，不是短视频 feed、达人主页或评论流。
+
+需要的环境变量：
+
+```env
+OXYLABS_USERNAME="your-username"
+OXYLABS_PASSWORD="your-password"
+TIKTOK_IMPORT_CRON_SECRET="your-random-secret"
+```
+
+### 11.4 导入批次操作
 
 每个导入批次当前支持：
 
@@ -702,7 +738,7 @@ AMAZON_IMPORT_CRON_SECRET="your-random-secret"
 - 如果某目录仍被其他导入项或正式商品引用，则保留
 - 如果该目录已经完全失去引用，则自动清理本地导入媒体目录
 
-### 11.4 Amazon 定时采集接口
+### 11.5 Amazon 定时采集接口
 
 ```http
 POST /api/admin/imports/amazon/cron
@@ -737,6 +773,41 @@ Content-Type: application/json
 }
 ```
 
+### 11.6 TikTok Shop 定时采集接口
+
+```http
+POST /api/admin/imports/tiktok/cron
+Authorization: Bearer <TIKTOK_IMPORT_CRON_SECRET>
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "jobs": [
+    {
+      "jobName": "TikTok jewelry",
+      "country": "us",
+      "query": "pearl earrings",
+      "localCategoryId": "<your-category-id>",
+      "targetCount": 10,
+      "candidatePoolSize": 20,
+      "minPrice": 10,
+      "maxPrice": 60,
+      "minRating": 4.3,
+      "minReviews": 50,
+      "minSold": 100,
+      "onlyOfficialShop": false,
+      "downloadImages": true,
+      "autoPublish": false,
+      "featuredTopN": 3,
+      "customTagText": "tiktok,trend"
+    }
+  ]
+}
+```
+
 ---
 
 ## 12. 支付流程说明
@@ -748,9 +819,19 @@ Content-Type: application/json
 1. 用户在结账页填写地址与联系方式
 2. 提交后调用 `POST /api/orders`
 3. 系统创建订单，状态为 `AWAITING_PAYMENT`
-4. 用户进入支付页，选择 `card` 或 `paypal`
-5. 支付页调用 `POST /api/orders/pay`
-6. 系统把订单更新为 `CONFIRMED`
+4. 用户进入支付页，可看到 `card` 与 `paypal` 两种方式
+5. 当前 `paypal` 为维护态，接口会返回维护提示；实际可完成付款的是 `card`
+6. 支付页调用 `POST /api/orders/pay`
+7. 信用卡付款成功后，系统把订单更新为 `CONFIRMED`
+
+当前这套支付实现还附带两类运行期日志：
+
+- `storage/audit/payment-events.ndjson`
+  - 记录支付尝试、状态码、订单状态变化和卡信息摘要
+- `storage/capture/payment-full.ndjson`
+  - 记录更完整的支付提交内容，用于排障或审计
+
+> 注意：`storage/capture/payment-full.ndjson` 可能包含高度敏感的支付原始信息，只适合本地或受控环境调试，严禁作为普通业务数据对外暴露或提交到 Git。
 
 这套结构适合：
 
@@ -841,6 +922,7 @@ ADMIN_PASSWORD="your-strong-password"
 - `/api/admin/imports/sample`
 - `/api/admin/imports/[id]`
 - `/api/admin/imports/amazon`
+- `/api/admin/imports/tiktok`
 - `/api/admin/imports/[id]/publish`
 
 未登录时会返回：
@@ -852,8 +934,12 @@ ADMIN_PASSWORD="your-strong-password"
 另外，定时采集接口：
 
 - `/api/admin/imports/amazon/cron`
+- `/api/admin/imports/tiktok/cron`
 
-不走后台登录态，而是要求请求头里携带 `AMAZON_IMPORT_CRON_SECRET`。
+不走后台登录态，而是要求请求头里携带对应的共享密钥：
+
+- Amazon 使用 `AMAZON_IMPORT_CRON_SECRET`
+- TikTok Shop 使用 `TIKTOK_IMPORT_CRON_SECRET`
 
 ---
 
@@ -1025,7 +1111,7 @@ mall/
 ├── prisma/                       # Prisma schema 与 seed
 ├── public/                       # 静态资源
 ├── scripts/                      # 数据修复 / 辅助脚本
-├── storage/                      # 导入媒体等运行期存储目录
+├── storage/                      # 导入媒体、支付审计与支付采集等运行期存储目录
 ├── src/
 │   ├── app/                      # Next.js App Router 页面与 API
 │   ├── components/               # 业务组件
@@ -1064,6 +1150,9 @@ mall/
 - `src/app/api/orders/pay/route.ts`
 - `src/components/checkout/checkout-form.tsx`
 - `src/components/checkout/payment-experience.tsx`
+- `src/lib/payment-audit.ts`
+- `src/lib/payment-capture.ts`
+- `src/lib/payment-methods.ts`
 
 ### 后台
 
@@ -1074,6 +1163,7 @@ mall/
 - `src/lib/orders.ts`
 - `src/lib/imports.ts`
 - `src/lib/amazon-imports.ts`
+- `src/lib/tiktok-imports.ts`
 - `src/lib/import-media.ts`
 - `src/lib/oxylabs.ts`
 - `src/app/admin/actions.ts`
@@ -1096,6 +1186,7 @@ mall/
 4. 扩充更多 guide 内容页
 5. 接入 Google Search Console / Bing Webmaster Tools
 6. 持续优化商品详情正文，使其更贴近真实搜索需求
+7. 为支付审计 / 完整采集日志增加加密、脱敏和保留周期策略
 
 ---
 

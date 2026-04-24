@@ -10,7 +10,7 @@ const faqs = {
     {
       question: 'Which payment methods are available?',
       answer:
-        'Orders can be completed with credit card or PayPal. Once payment is recorded, the order immediately moves into confirmation and fulfillment.',
+        'Orders can currently be completed with credit card. PayPal is under maintenance for now. Once payment is recorded, the order immediately moves into confirmation and fulfillment.',
     },
     {
       question: 'How long does order processing take?',
@@ -51,7 +51,7 @@ const faqs = {
   zh: [
     {
       question: '支持哪些支付方式？',
-      answer: '当前订单支持信用卡与 PayPal 付款，支付成功后系统会立即更新订单状态。',
+      answer: '当前订单暂时支持信用卡付款，PayPal 通道维护中。支付成功后系统会立即更新订单状态。',
     },
     {
       question: '订单一般多久发出？',

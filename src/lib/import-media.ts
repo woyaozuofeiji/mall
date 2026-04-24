@@ -3,6 +3,12 @@ import { promises as fs } from "node:fs";
 
 const IMPORT_MEDIA_API_PREFIX = "/api/media/imports";
 const LEGACY_IMPORT_MEDIA_PREFIX = "/imports/";
+const IMPORT_MEDIA_PUBLIC_ALIASES = [
+  {
+    storagePrefix: "tiktok/",
+    publicPrefix: "marketplace/",
+  },
+] as const;
 
 export function getImportStorageRoot() {
   return path.join(process.cwd(), "storage", "imports");
@@ -19,9 +25,29 @@ export function sanitizeImportPathSegments(segments: string[]) {
     .filter((segment) => !segment.includes("..") && !segment.includes("/"));
 }
 
+function toPublicImportPath(relativePath: string) {
+  for (const alias of IMPORT_MEDIA_PUBLIC_ALIASES) {
+    if (relativePath.startsWith(alias.storagePrefix)) {
+      return `${alias.publicPrefix}${relativePath.slice(alias.storagePrefix.length)}`;
+    }
+  }
+
+  return relativePath;
+}
+
+function toStorageImportPath(relativePath: string) {
+  for (const alias of IMPORT_MEDIA_PUBLIC_ALIASES) {
+    if (relativePath.startsWith(alias.publicPrefix)) {
+      return `${alias.storagePrefix}${relativePath.slice(alias.publicPrefix.length)}`;
+    }
+  }
+
+  return relativePath;
+}
+
 export function buildImportMediaUrl(relativePath: string) {
   const normalized = relativePath.replace(/^\/+/, "").replace(/\\/g, "/");
-  return `${IMPORT_MEDIA_API_PREFIX}/${normalized}`;
+  return `${IMPORT_MEDIA_API_PREFIX}/${toPublicImportPath(normalized)}`;
 }
 
 export function parseImportMediaRelativePath(url: string | null | undefined) {
@@ -35,11 +61,15 @@ export function parseImportMediaRelativePath(url: string | null | undefined) {
   }
 
   if (normalizedUrl.startsWith(`${IMPORT_MEDIA_API_PREFIX}/`)) {
-    return sanitizeImportPathSegments(normalizedUrl.slice(IMPORT_MEDIA_API_PREFIX.length + 1).split("/")).join("/");
+    return toStorageImportPath(
+      sanitizeImportPathSegments(normalizedUrl.slice(IMPORT_MEDIA_API_PREFIX.length + 1).split("/")).join("/"),
+    );
   }
 
   if (normalizedUrl.startsWith(LEGACY_IMPORT_MEDIA_PREFIX)) {
-    return sanitizeImportPathSegments(normalizedUrl.slice(LEGACY_IMPORT_MEDIA_PREFIX.length).split("/")).join("/");
+    return toStorageImportPath(
+      sanitizeImportPathSegments(normalizedUrl.slice(LEGACY_IMPORT_MEDIA_PREFIX.length).split("/")).join("/"),
+    );
   }
 
   return null;
@@ -68,7 +98,7 @@ export function rewriteImportAssetUrl(url: string) {
 }
 
 export async function resolveImportAssetFile(segments: string[]) {
-  const safeSegments = sanitizeImportPathSegments(segments);
+  const safeSegments = sanitizeImportPathSegments(toStorageImportPath(segments.join("/")).split("/"));
   if (safeSegments.length === 0) {
     return null;
   }

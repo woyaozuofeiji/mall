@@ -13,11 +13,11 @@ export function CartClient({ locale, dictionary }: { locale: Locale; dictionary:
     locale === "zh"
       ? {
           summary: "订单摘要",
-          paymentNote: "提交订单后可继续选择信用卡或 PayPal，并完成付款。",
+          paymentNote: "提交订单后可继续使用信用卡完成付款。PayPal 支付通道当前维护中。",
         }
       : {
           summary: "Summary",
-          paymentNote: "After the order is created, continue by choosing card or PayPal to complete payment.",
+          paymentNote: "After the order is created, continue with card payment to complete checkout. PayPal is currently under maintenance.",
         };
 
   if (items.length === 0) {

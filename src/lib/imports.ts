@@ -104,9 +104,14 @@ async function findExistingImportedProduct(payload: AdminProductPayload) {
   const sourcePayload = getImportSourcePayload(payload);
   const upstream = getNestedRecord(sourcePayload, "upstream");
   const provider = typeof upstream?.provider === "string" ? upstream.provider : undefined;
-  const asin = typeof upstream?.asin === "string" ? upstream.asin : undefined;
+  const identifierEntries = [
+    ["asin", typeof upstream?.asin === "string" ? upstream.asin : undefined],
+    ["productId", typeof upstream?.productId === "string" ? upstream.productId : undefined],
+    ["itemId", typeof upstream?.itemId === "string" ? upstream.itemId : undefined],
+    ["externalId", typeof upstream?.externalId === "string" ? upstream.externalId : undefined],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
 
-  if (provider && asin) {
+  if (provider && identifierEntries.length > 0) {
     const imported = await prisma.product.findFirst({
       where: {
         AND: [
@@ -117,10 +122,12 @@ async function findExistingImportedProduct(payload: AdminProductPayload) {
             },
           },
           {
-            sourcePayload: {
-              path: ["upstream", "asin"],
-              equals: asin,
-            },
+            OR: identifierEntries.map(([key, value]) => ({
+              sourcePayload: {
+                path: ["upstream", key],
+                equals: value,
+              },
+            })),
           },
         ],
       },
@@ -362,6 +369,18 @@ export async function publishImportBatch(batchId: string, options?: { categoryId
     if (rawPayload?.source === "amazon-import") {
       const { renormalizeStoredAmazonImportItem } = await import("@/lib/amazon-imports");
       const normalized = await renormalizeStoredAmazonImportItem({
+        rawPayload: item.rawPayload,
+        normalizedData: item.normalizedData,
+      });
+
+      if (normalized?.payload) {
+        draftPayload = normalized.payload;
+      }
+    }
+
+    if (rawPayload?.source === "tiktok-import") {
+      const { renormalizeStoredTikTokImportItem } = await import("@/lib/tiktok-imports");
+      const normalized = await renormalizeStoredTikTokImportItem({
         rawPayload: item.rawPayload,
         normalizedData: item.normalizedData,
       });

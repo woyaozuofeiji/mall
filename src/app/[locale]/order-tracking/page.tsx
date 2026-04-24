@@ -3,6 +3,7 @@ import { findOrderByLookup } from '@/lib/orders';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { getDictionary, isLocale } from '@/lib/i18n';
 import { getOrderStatusMeta, getOrderTimeline } from '@/lib/order-status';
+import { getPaymentMethodMaintenanceMessage } from '@/lib/payment-methods';
 import { buildPageMetadata } from "@/lib/seo";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ export default async function OrderTrackingPage({
   const result = hasLookup ? await findOrderByLookup(orderNumber, emailValue) : null;
   const statusMeta = result ? getOrderStatusMeta(result.status, locale) : null;
   const timeline = result ? getOrderTimeline(result.status, locale) : [];
+  const paypalMaintenanceMessage = getPaymentMethodMaintenanceMessage(locale, 'paypal');
 
   return (
     <div className='space-y-10 pb-16 sm:space-y-12 sm:pb-20'>
@@ -217,8 +219,8 @@ export default async function OrderTrackingPage({
                   </p>
                   <p className='mt-3 text-sm leading-7 text-[#6d6670]'>
                     {locale === 'zh'
-                      ? '完成付款后，订单会立即进入确认与备货流程。你也可以直接从这里继续付款。'
-                      : 'Once payment is completed, the order will move into confirmation and fulfillment. You can continue payment directly from here.'}
+                      ? '完成付款后，订单会立即进入确认与备货流程。你也可以直接从这里继续付款，当前建议优先使用信用卡。'
+                      : 'Once payment is completed, the order will move into confirmation and fulfillment. You can continue payment directly from here, and card payment is currently recommended.'}
                   </p>
                   <div className='mt-5 flex flex-wrap gap-3'>
                     <Button href={`/${locale}/checkout/payment?order=${encodeURIComponent(result.orderNumber)}&email=${encodeURIComponent(result.email)}`}>
@@ -228,9 +230,10 @@ export default async function OrderTrackingPage({
                       href={`/${locale}/checkout/payment?order=${encodeURIComponent(result.orderNumber)}&email=${encodeURIComponent(result.email)}&method=paypal`}
                       variant='secondary'
                     >
-                      {locale === 'zh' ? '使用 PayPal 支付' : 'Pay with PayPal'}
+                      {locale === 'zh' ? 'PayPal 维护提示' : 'PayPal maintenance'}
                     </Button>
                   </div>
+                  <p className='mt-4 text-sm leading-7 text-[#ff6d88]'>{paypalMaintenanceMessage}</p>
                 </div>
               ) : (
                 <div className='rounded-[1.5rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-5 ring-1 ring-[rgba(241,225,230,0.95)]'>

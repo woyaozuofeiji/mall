@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { AmazonImportForm } from "@/components/admin/amazon-import-form";
 import { ImportActions } from "@/components/admin/import-actions";
 import { ImportBatchActions } from "@/components/admin/import-batch-actions";
+import { TikTokImportForm } from "@/components/admin/tiktok-import-form";
 import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
 import { getAdminProductFormMeta } from "@/lib/admin";
@@ -36,6 +37,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
     >
       <div className="grid gap-6">
         <AmazonImportForm locale={locale} categories={productFormMeta.categories} />
+        <TikTokImportForm locale={locale} categories={productFormMeta.categories} />
 
         <div className="flex flex-col gap-4 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
           <p className="text-sm leading-7 text-white/70">{dictionary.imports.sampleHint}</p>

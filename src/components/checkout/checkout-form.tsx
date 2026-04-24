@@ -3,18 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useController, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { Locale, SiteDictionary } from "@/lib/types";
 import { useCart } from "@/components/providers/cart-provider";
 import { checkoutCustomerSchema } from "@/lib/validation/checkout";
+import type { PaymentMethod } from "@/lib/payment-methods";
 import { Button } from "@/components/ui/button";
 import { StorefrontPanel } from "@/components/storefront/page-hero";
 import { formatCurrency } from "@/lib/format";
 import { PaymentMethodModal } from "@/components/checkout/payment-method-modal";
 
 const schema = checkoutCustomerSchema.extend({
-  agreed: z.literal(true),
+  agreed: z.boolean().refine((value) => value),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -26,14 +27,31 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [paymentChoice, setPaymentChoice] = useState<{ orderNumber: string; email: string } | null>(null);
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      country: "",
+      region: "",
+      city: "",
+      address: "",
+      postalCode: "",
+      note: "",
+      agreed: false,
+    },
+  });
+  const { field: agreedField } = useController({
+    name: "agreed",
+    control,
   });
 
-  const routeToPaymentPage = (orderNumber: string, email: string, method?: "card" | "paypal") => {
+  const routeToPaymentPage = (orderNumber: string, email: string, method?: PaymentMethod) => {
     const params = new URLSearchParams({
       order: orderNumber,
       email,
@@ -96,6 +114,23 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
 
   const inputClass =
     "mt-2 h-12 w-full rounded-[1rem] border border-[rgba(241,203,213,0.9)] bg-[#fffdfd] px-4 text-base text-[#2f2b32] outline-none transition focus:border-[rgba(255,126,149,0.55)] sm:text-sm";
+  const agreementErrorText =
+    locale === "zh" ? "请确认结算信息后再继续付款。" : "Please confirm your checkout details before continuing.";
+  const renderAgreementCheckbox = (id: string) => (
+    <label className="flex items-start gap-3" htmlFor={id}>
+      <input
+        id={id}
+        className="mt-1"
+        type="checkbox"
+        name={agreedField.name}
+        checked={Boolean(agreedField.value)}
+        aria-invalid={errors.agreed ? "true" : "false"}
+        onBlur={agreedField.onBlur}
+        onChange={(event) => agreedField.onChange(event.target.checked)}
+      />
+      <span>{dictionary.checkout.terms}</span>
+    </label>
+  );
 
   return (
     <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
@@ -238,11 +273,8 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
             <span className="text-lg font-semibold text-[#2f2b32]">{formatCurrency(subtotal, locale)}</span>
           </div>
           <div className="mt-4 rounded-[1.4rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-4 text-sm leading-7 text-[#6d6670] ring-1 ring-[rgba(241,225,230,0.95)]">
-            <label className="flex items-start gap-3">
-              <input className="mt-1" type="checkbox" {...register("agreed")} />
-              <span>{dictionary.checkout.terms}</span>
-            </label>
-            {errors.agreed ? <span className='mt-2 block text-xs text-[#ff6d88]'>{locale === 'zh' ? '请确认结算信息。' : 'Please confirm the terms.'}</span> : null}
+            {renderAgreementCheckbox("checkout-agreed-mobile")}
+            {errors.agreed ? <span className='mt-2 block text-xs text-[#ff6d88]'>{agreementErrorText}</span> : null}
           </div>
           {submitError ? <p className="mt-4 rounded-[1rem] bg-[#fff3f6] px-4 py-3 text-sm text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">{submitError}</p> : null}
           <Button type="submit" className="mt-6 w-full" disabled={!hasItems || isSubmitting}>
@@ -250,8 +282,8 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
           </Button>
           <p className="mt-4 text-xs leading-6 text-[#8f8791]">
             {locale === 'zh'
-              ? '提交后系统会创建待付款订单，并立即引导你选择信用卡或 PayPal 完成支付。'
-              : 'Submitting creates a payment-pending order and immediately guides you into card or PayPal checkout.'}
+              ? '提交后系统会创建待付款订单，并立即引导你使用信用卡完成支付。PayPal 通道当前维护中。'
+              : 'Submitting creates a payment-pending order and immediately guides you into card checkout. PayPal is currently under maintenance.'}
           </p>
         </StorefrontPanel>
       </div>
@@ -295,11 +327,8 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
           <span className="text-lg font-semibold text-[#2f2b32]">{formatCurrency(subtotal, locale)}</span>
         </div>
         <div className="mt-6 rounded-[1.4rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-4 text-sm leading-7 text-[#6d6670] ring-1 ring-[rgba(241,225,230,0.95)]">
-          <label className="flex items-start gap-3">
-            <input className="mt-1" type="checkbox" {...register("agreed")} />
-            <span>{dictionary.checkout.terms}</span>
-          </label>
-          {errors.agreed ? <span className='mt-2 block text-xs text-[#ff6d88]'>{locale === 'zh' ? '请确认结算信息。' : 'Please confirm the terms.'}</span> : null}
+          {renderAgreementCheckbox("checkout-agreed-desktop")}
+          {errors.agreed ? <span className='mt-2 block text-xs text-[#ff6d88]'>{agreementErrorText}</span> : null}
         </div>
         {submitError ? <p className="mt-4 rounded-[1rem] bg-[#fff3f6] px-4 py-3 text-sm text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">{submitError}</p> : null}
         <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || isSubmitting}>
@@ -307,8 +336,8 @@ export function CheckoutForm({ locale, dictionary }: { locale: Locale; dictionar
         </Button>
         <p className="mt-4 text-xs leading-6 text-[#8f8791]">
           {locale === 'zh'
-            ? '提交后系统会创建待付款订单，并立即引导你选择信用卡或 PayPal 完成支付。'
-            : 'Submitting creates a payment-pending order and immediately guides you into card or PayPal checkout.'}
+            ? '提交后系统会创建待付款订单，并立即引导你使用信用卡完成支付。PayPal 通道当前维护中。'
+            : 'Submitting creates a payment-pending order and immediately guides you into card checkout. PayPal is currently under maintenance.'}
         </p>
         <div className="mt-4 rounded-[1.2rem] bg-[#fff8fa] px-4 py-3 text-sm leading-7 text-[#6d6670] ring-1 ring-[rgba(241,225,230,0.95)]">
           {locale === "zh"

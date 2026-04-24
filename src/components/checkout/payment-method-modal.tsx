@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { CreditCard, WalletCards, X } from 'lucide-react';
 import type { Locale } from '@/lib/types';
+import { getPaymentMethodMaintenanceMessage, isPaymentMethodAvailable, type PaymentMethod } from '@/lib/payment-methods';
 import { Button } from '@/components/ui/button';
-
-type PaymentMethod = 'card' | 'paypal';
 
 export function PaymentMethodModal({
   locale,
@@ -20,6 +19,8 @@ export function PaymentMethodModal({
   onChoose: (method: PaymentMethod) => void;
   onChooseLater: () => void;
 }) {
+  const [notice, setNotice] = useState<string | null>(null);
+  const paypalAvailable = isPaymentMethodAvailable('paypal');
   const copy =
     locale === 'zh'
       ? {
@@ -39,10 +40,11 @@ export function PaymentMethodModal({
             {
               key: 'paypal' as const,
               title: 'PayPal',
-              description: '进入 PayPal 授权页，完成当前订单的在线付款。',
-              cta: '使用 PayPal 支付',
+              description: paypalAvailable ? '进入 PayPal 授权页，完成当前订单的在线付款。' : 'PayPal 支付通道当前维护中，暂时无法用于本订单付款。',
+              cta: paypalAvailable ? '使用 PayPal 支付' : 'PayPal 维护中',
             },
           ],
+          maintenanceBadge: '维护中',
         }
       : {
           eyebrow: 'Next step: complete payment',
@@ -61,10 +63,13 @@ export function PaymentMethodModal({
             {
               key: 'paypal' as const,
               title: 'PayPal',
-              description: 'Continue to PayPal authorization and finish the online payment for this order.',
-              cta: 'Pay with PayPal',
+              description: paypalAvailable
+                ? 'Continue to PayPal authorization and finish the online payment for this order.'
+                : 'PayPal payment is currently under maintenance and cannot be used for this order right now.',
+              cta: paypalAvailable ? 'Pay with PayPal' : 'PayPal unavailable',
             },
           ],
+          maintenanceBadge: 'Maintenance',
         };
 
   useEffect(() => {
@@ -113,18 +118,43 @@ export function PaymentMethodModal({
                 key={method.key}
                 className='rounded-[1.6rem] border border-[rgba(241,225,230,0.95)] bg-white p-5 shadow-[0_18px_42px_-30px_rgba(214,187,198,0.68)]'
               >
-                <div className='inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
-                  {icon}
+                <div className='flex items-start justify-between gap-3'>
+                  <div className='inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
+                    {icon}
+                  </div>
+                  {method.key === 'paypal' && !paypalAvailable ? (
+                    <span className='inline-flex rounded-full bg-[#fff3f6] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
+                      {copy.maintenanceBadge}
+                    </span>
+                  ) : null}
                 </div>
                 <h3 className='mt-4 text-[1.35rem] font-semibold text-[#2f2b32]'>{method.title}</h3>
                 <p className='mt-3 text-sm leading-7 text-[#6d6670]'>{method.description}</p>
-                <Button type='button' className='mt-5 w-full' onClick={() => onChoose(method.key)}>
+                <Button
+                  type='button'
+                  className='mt-5 w-full'
+                  onClick={() => {
+                    if (method.key === 'paypal' && !paypalAvailable) {
+                      setNotice(getPaymentMethodMaintenanceMessage(locale, 'paypal'));
+                      return;
+                    }
+
+                    setNotice(null);
+                    onChoose(method.key);
+                  }}
+                >
                   {method.cta}
                 </Button>
               </div>
             );
           })}
         </div>
+
+        {notice ? (
+          <div className='mt-5 rounded-[1.2rem] bg-[#fff3f6] px-4 py-3 text-sm leading-7 text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
+            {notice}
+          </div>
+        ) : null}
 
         <div className='mt-5 flex justify-end'>
           <Button type='button' variant='secondary' onClick={onChooseLater}>
