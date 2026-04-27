@@ -5,7 +5,7 @@ export const checkoutCustomerSchema = z.object({
   email: z.email(),
   phone: z.string().min(5),
   country: z.string().min(2),
-  region: z.string().min(1),
+  region: z.string(),
   city: z.string().min(1),
   address: z.string().min(4),
   postalCode: z.string().min(3),
@@ -14,7 +14,7 @@ export const checkoutCustomerSchema = z.object({
 
 export const checkoutLineSchema = z.object({
   slug: z.string().min(1),
-  quantity: z.number().int().positive(),
+  quantity: z.number().int().positive().max(99),
   variantId: z.string().optional(),
 });
 

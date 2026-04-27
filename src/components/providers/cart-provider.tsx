@@ -69,9 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       },
       updateQuantity: (lineId, quantity) => {
         setItems((current) =>
-          current
-            .map((item) => (item.id === lineId ? { ...item, quantity: Math.max(1, quantity) } : item))
-            .filter((item) => item.quantity > 0),
+          current.map((item) => (item.id === lineId ? { ...item, quantity: Math.max(1, quantity) } : item)),
         );
       },
       removeItem: (lineId) => {

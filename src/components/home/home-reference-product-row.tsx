@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, Star } from "lucide-react";
+import { ChevronRight, Heart, Star } from "lucide-react";
 import type { Locale, Product } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -79,22 +79,6 @@ export function HomeReferenceProductRow({
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-
-          <button
-            type="button"
-            aria-label="Previous"
-            className="absolute -left-6 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#4f4952] shadow-[0_16px_36px_-24px_rgba(201,176,187,0.8)] ring-1 ring-[rgba(241,225,230,0.9)] xl:flex"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            aria-label="Next"
-            className="absolute -right-6 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#4f4952] shadow-[0_16px_36px_-24px_rgba(201,176,187,0.8)] ring-1 ring-[rgba(241,225,230,0.9)] xl:flex"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} locale={locale} badge={badge} />

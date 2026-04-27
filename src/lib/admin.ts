@@ -40,6 +40,19 @@ type ProductSpecRecord = {
   valueZh?: string;
 };
 
+function getSourcePayloadRecord(payload: AdminProductPayload) {
+  return payload.sourcePayload && typeof payload.sourcePayload === "object" && !Array.isArray(payload.sourcePayload)
+    ? (payload.sourcePayload as Record<string, unknown>)
+    : undefined;
+}
+
+function getNestedRecord(input: Record<string, unknown> | undefined, key: string) {
+  const value = input?.[key];
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
 export interface AdminProductListItem {
   id: string;
   slug: string;
@@ -330,6 +343,81 @@ export async function getAdminProductFormMeta() {
   };
 }
 
+async function findExistingAdminProduct(payload: AdminProductPayload) {
+  const sourcePayload = getSourcePayloadRecord(payload);
+  const upstream = getNestedRecord(sourcePayload, "upstream");
+  const provider = typeof upstream?.provider === "string" ? upstream.provider : undefined;
+  const identifierEntries = [
+    ["asin", typeof upstream?.asin === "string" ? upstream.asin : undefined],
+    ["productId", typeof upstream?.productId === "string" ? upstream.productId : undefined],
+    ["itemId", typeof upstream?.itemId === "string" ? upstream.itemId : undefined],
+    ["externalId", typeof upstream?.externalId === "string" ? upstream.externalId : undefined],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
+
+  if (provider && identifierEntries.length > 0) {
+    const imported = await prisma.product.findFirst({
+      where: {
+        AND: [
+          {
+            sourcePayload: {
+              path: ["upstream", "provider"],
+              equals: provider,
+            },
+          },
+          {
+            OR: identifierEntries.map(([key, value]) => ({
+              sourcePayload: {
+                path: ["upstream", key],
+                equals: value,
+              },
+            })),
+          },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (imported) {
+      return imported;
+    }
+  }
+
+  return prisma.product.findUnique({
+    where: { slug: payload.slug },
+    select: { id: true },
+  });
+}
+
+export async function resolveAdminCategory(input: { categoryId?: string; categorySlug?: string }) {
+  if (input.categoryId) {
+    const category = await prisma.category.findUnique({
+      where: { id: input.categoryId },
+      select: { id: true, slug: true, nameEn: true, nameZh: true },
+    });
+
+    if (!category) {
+      throw new Error(`分类不存在：${input.categoryId}`);
+    }
+
+    return category;
+  }
+
+  if (input.categorySlug) {
+    const category = await prisma.category.findUnique({
+      where: { slug: input.categorySlug },
+      select: { id: true, slug: true, nameEn: true, nameZh: true },
+    });
+
+    if (!category) {
+      throw new Error(`分类 slug 不存在：${input.categorySlug}`);
+    }
+
+    return category;
+  }
+
+  throw new Error("categoryId 和 categorySlug 至少提供一个");
+}
+
 export async function getAdminProductById(id: string) {
   const record = await prisma.product.findUnique({
     where: { id },
@@ -423,6 +511,23 @@ export async function updateAdminProduct(id: string, payload: AdminProductPayloa
   });
 
   return product;
+}
+
+export async function upsertAdminProduct(payload: AdminProductPayload) {
+  const existing = await findExistingAdminProduct(payload);
+  if (existing) {
+    const updated = await updateAdminProduct(existing.id, payload);
+    return {
+      id: updated.id,
+      mode: "updated" as const,
+    };
+  }
+
+  const created = await createAdminProduct(payload);
+  return {
+    id: created.id,
+    mode: "created" as const,
+  };
 }
 
 export async function archiveOrDeleteAdminProduct(id: string) {

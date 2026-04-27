@@ -178,24 +178,8 @@ export default async function ProductDetailPage({
   };
 
   return (
-    <div className="space-y-10 pb-16 pt-8 sm:space-y-12 sm:pb-20 sm:pt-10">
+    <div className="space-y-10 pb-12 pt-8 sm:space-y-12 sm:pb-16 sm:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }} />
-      <div className="fixed inset-x-3 bottom-3 z-40 lg:hidden">
-        <div className="rounded-[1.25rem] bg-white/96 px-4 py-3 shadow-[0_22px_48px_-26px_rgba(47,43,50,0.35)] ring-1 ring-[rgba(241,225,230,0.95)] backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#2f2b32]">{t(locale, product.name)}</p>
-              <p className="text-sm text-[#6d6670]">{formatCurrency(product.price, locale)}</p>
-            </div>
-            <a
-              href="#quick-buy"
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(90deg,#ff8aa1_0%,#ff6d88_100%)] px-5 text-sm font-semibold text-white shadow-[0_18px_36px_-24px_rgba(255,109,136,0.72)]"
-            >
-              {locale === "zh" ? "选规格并加购" : "Choose options"}
-            </a>
-          </div>
-        </div>
-      </div>
       <Container className="space-y-8 sm:space-y-10">
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-[#8f8791]">
           <Link href={`/${locale}`} className="transition hover:text-[#ff6d88]">
@@ -218,7 +202,7 @@ export default async function ProductDetailPage({
             <ProductGallery key={product.id} product={product} locale={locale} />
           </div>
 
-          <StorefrontPanel className="space-y-5 p-5 lg:sticky lg:top-28 lg:h-fit sm:p-6">
+          <StorefrontPanel className="mx-auto w-full max-w-[24rem] min-w-0 space-y-4 overflow-hidden p-4 sm:max-w-none sm:space-y-5 sm:p-6 lg:sticky lg:top-28 lg:h-fit">
             <div className="flex flex-wrap items-center gap-2">
               <Link href={`/${locale}/shop/category/${product.categorySlug}`} className="transition hover:-translate-y-0.5">
                 <Badge>{category ? t(locale, category.name) : product.categorySlug}</Badge>
@@ -231,11 +215,13 @@ export default async function ProductDetailPage({
               </span>
             </div>
 
-            <div className="space-y-3">
-              <h1 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.04em] text-[#2f2b32] sm:text-[3.3rem]">{t(locale, product.name)}</h1>
-              <p className="max-w-2xl text-[15px] leading-7 text-[#6d6670]">{t(locale, product.subtitle)}</p>
+            <div className="space-y-2.5 sm:space-y-3">
+              <h1 className="break-words text-[clamp(1.9rem,8.5vw,2.4rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-[#2f2b32] sm:text-[3.3rem]">
+                {t(locale, product.name)}
+              </h1>
+              <p className="max-w-none text-sm leading-6 text-[#6d6670] sm:max-w-2xl sm:text-[15px] sm:leading-7">{t(locale, product.subtitle)}</p>
               {discountPercent ? (
-                <p className="text-sm leading-7 text-[#8f8791]">
+                <p className="text-sm leading-6 text-[#8f8791] sm:leading-7">
                   {locale === "zh"
                     ? `当前折扣约 ${discountPercent}% ，适合作为节日送礼、礼盒加购或搭配购买时快速决策。`
                     : `Currently marked at about ${discountPercent}% off, which works well for gifting edits, bundle add-ons and quicker purchase decisions.`}
@@ -244,10 +230,10 @@ export default async function ProductDetailPage({
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <p className="text-[2rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{formatCurrency(product.price, locale)}</p>
+              <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+                <p className="text-[clamp(1.7rem,7vw,2rem)] font-semibold tracking-[-0.03em] text-[#2f2b32]">{formatCurrency(product.price, locale)}</p>
                 {product.compareAtPrice ? (
-                  <p className="pb-1 text-base text-[#b3a8b2] line-through">
+                  <p className="pb-0.5 text-sm text-[#b3a8b2] line-through sm:pb-1 sm:text-base">
                     {locale === "zh" ? "原价 " : "Was "}
                     {formatCurrency(product.compareAtPrice, locale)}
                   </p>
@@ -276,7 +262,9 @@ export default async function ProductDetailPage({
 
             <div className="flex flex-wrap gap-2">
               {heroSpecs.map((spec) => (
-                <StorefrontInfoPill key={spec.label.en}>{t(locale, spec.label)} · {t(locale, spec.value)}</StorefrontInfoPill>
+                <StorefrontInfoPill key={spec.label.en} className="whitespace-normal text-center leading-5">
+                  {t(locale, spec.label)} · {t(locale, spec.value)}
+                </StorefrontInfoPill>
               ))}
             </div>
 

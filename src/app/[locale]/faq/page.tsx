@@ -165,16 +165,21 @@ export default async function FaqPage({ params }: { params: Promise<{ locale: st
         </StorefrontPanel>
 
         {faqs[locale].map((faq, index) => (
-          <StorefrontPanel key={faq.question} className='p-6 sm:p-7'>
-            <div className='flex items-start gap-4'>
-              <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff3f6] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
-                {String(index + 1).padStart(2, '0')}
+          <StorefrontPanel key={faq.question} className='overflow-hidden p-0'>
+            <details className='group'>
+              <summary className='flex cursor-pointer list-none items-start gap-4 p-6 sm:p-7 [&::-webkit-details-marker]:hidden'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff3f6] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]'>
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+                <div className='flex-1'>
+                  <h2 className='text-[1.35rem] font-semibold leading-7 text-[#2f2b32] sm:text-[1.7rem]'>{faq.question}</h2>
+                </div>
+                <svg className='mt-1 h-5 w-5 shrink-0 text-[#8f8791] transition-transform group-open:rotate-180' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth='2'><path strokeLinecap='round' strokeLinejoin='round' d='M19 9l-7 7-7-7' /></svg>
+              </summary>
+              <div className='px-6 pb-6 pl-[4.75rem] sm:px-7 sm:pb-7'>
+                <p className='text-sm leading-8 text-[#6d6670]'>{faq.answer}</p>
               </div>
-              <div>
-                <h2 className='text-[1.35rem] font-semibold leading-7 text-[#2f2b32] sm:text-[1.7rem]'>{faq.question}</h2>
-                <p className='mt-3 text-sm leading-8 text-[#6d6670]'>{faq.answer}</p>
-              </div>
-            </div>
+            </details>
           </StorefrontPanel>
         ))}
       </Container>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, CircleUserRound, Menu, Search, ShoppingCart, Truck } from "lucide-react";
+import { CircleUserRound, Menu, Search, ShoppingCart, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { locales, type Locale } from "@/lib/i18n";
 import { useCart } from "@/components/providers/cart-provider";
@@ -44,7 +44,7 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
   );
 
   const shippingCopy =
-    locale === "zh" ? "订单满 $59 包邮" : "Free Shipping on orders over $59";
+    locale === "zh" ? "订单满 $1 包邮" : "Free Shipping on orders over $1";
   const tagline =
     locale === "zh" ? "给日常增添一点温柔闪光" : "Treasures for Every Day";
   const mobileBrand = locale === "zh" ? "Northstar" : "Northstar";
@@ -64,7 +64,6 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
             </Link>
             <button type="button" className="inline-flex items-center gap-1 transition hover:text-[#ff6d88]">
               USD
-              <ChevronDown className="h-4 w-4" />
             </button>
           </div>
         </div>

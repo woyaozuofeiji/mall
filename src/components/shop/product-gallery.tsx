@@ -113,7 +113,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
                 >
                   <Image
                     src={image.url}
-                    alt={image.alt[locale] || product.name[locale]}
+                    alt={image.alt[locale] ?? product.name[locale]}
                     width={240}
                     height={240}
                     sizes="96px"
@@ -125,7 +125,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
             </div>
           ) : null}
 
-          <div className="relative w-[17rem] max-w-full justify-self-center overflow-hidden rounded-[1.8rem] border border-[rgba(241,225,230,0.95)] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] shadow-[0_28px_70px_-46px_rgba(29,22,18,0.42)] sm:w-full sm:max-w-none sm:rounded-[2.15rem]">
+          <div className="relative w-full max-w-[24rem] justify-self-center overflow-hidden rounded-[1.8rem] border border-[rgba(241,225,230,0.95)] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] shadow-[0_28px_70px_-46px_rgba(29,22,18,0.42)] sm:max-w-none sm:rounded-[2.15rem]">
             <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-center px-4 py-4 sm:justify-between sm:px-6 sm:py-5 lg:px-8">
               <div className="rounded-full border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.78)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8f8791] backdrop-blur-xl sm:text-[11px] sm:tracking-[0.24em]">
                 {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
@@ -148,7 +148,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
                       <div className="relative h-full w-full">
                         <Image
                           src={activeImage.url}
-                          alt={activeImage.alt[locale] || product.name[locale]}
+                          alt={activeImage.alt[locale] ?? product.name[locale]}
                           fill
                           sizes="(min-width: 1536px) 42rem, (min-width: 1280px) 40rem, (min-width: 1024px) min(52vw, 44rem), 100vw"
                           loading="eager"
@@ -211,7 +211,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
         </div>
 
         {canLoop ? (
-          <div className="mx-auto w-full max-w-[17rem] overflow-hidden rounded-[1.45rem] border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.94)] p-2.5 shadow-[0_24px_60px_-46px_rgba(29,22,18,0.42)] backdrop-blur-xl sm:max-w-none sm:p-3 lg:hidden">
+          <div className="mx-auto w-full max-w-[24rem] overflow-hidden rounded-[1.45rem] border border-[rgba(241,225,230,0.95)] bg-[rgba(255,255,255,0.94)] p-2.5 shadow-[0_24px_60px_-46px_rgba(29,22,18,0.42)] backdrop-blur-xl sm:max-w-none sm:p-3 lg:hidden">
             <div className="flex gap-2.5 overflow-x-auto pb-1 sm:gap-3">
               {images.map((image, index) => (
                 <button
@@ -228,7 +228,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
                 >
                   <Image
                     src={image.url}
-                    alt={image.alt[locale] || product.name[locale]}
+                    alt={image.alt[locale] ?? product.name[locale]}
                     width={240}
                     height={240}
                     sizes="80px"
@@ -291,7 +291,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
               <div className="relative h-full w-full">
                 <Image
                   src={activeImage.url}
-                  alt={activeImage.alt[locale] || product.name[locale]}
+                  alt={activeImage.alt[locale] ?? product.name[locale]}
                   fill
                   sizes="100vw"
                   className="object-contain"

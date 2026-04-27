@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { CartProvider } from "@/components/providers/cart-provider";
+import { SetDocumentLang } from "@/components/providers/set-document-lang";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -25,7 +26,8 @@ export default async function LocaleLayout({
 
   return (
     <CartProvider>
-      <div lang={locale === "zh" ? "zh-CN" : "en"} className="min-h-screen">
+      <SetDocumentLang locale={locale} />
+      <div className="min-h-screen">
         <SiteHeader locale={locale} dictionary={{ brand: dictionary.common.brand, nav: dictionary.nav }} />
         <main>{children}</main>
         <SiteFooter locale={locale} />

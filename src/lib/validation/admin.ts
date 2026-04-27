@@ -53,6 +53,24 @@ export const adminProductPayloadSchema = z.object({
   sourcePayload: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const externalProductPublishPayloadSchema = adminProductPayloadSchema
+  .omit({
+    categoryId: true,
+  })
+  .extend({
+    categoryId: nullableTrimmedString,
+    categorySlug: nullableTrimmedString,
+  })
+  .superRefine((value, ctx) => {
+    if (!value.categoryId && !value.categorySlug) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["categoryId"],
+        message: "categoryId 和 categorySlug 至少提供一个",
+      });
+    }
+  });
+
 export const adminOrderUpdatePayloadSchema = z.object({
   status: z.enum(["NEW", "CONFIRMED", "AWAITING_PAYMENT", "PROCESSING", "SHIPPED", "CANCELLED"]),
   note: nullableTrimmedString,
@@ -65,5 +83,6 @@ export const adminBulkDeletePayloadSchema = z.object({
 });
 
 export type AdminProductPayload = z.infer<typeof adminProductPayloadSchema>;
+export type ExternalProductPublishPayload = z.infer<typeof externalProductPublishPayloadSchema>;
 export type AdminOrderUpdatePayload = z.infer<typeof adminOrderUpdatePayloadSchema>;
 export type AdminBulkDeletePayload = z.infer<typeof adminBulkDeletePayloadSchema>;

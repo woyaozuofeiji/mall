@@ -18,10 +18,14 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top, rgba(255, 223, 231, 0.28), transparent 32%),
     linear-gradient(180deg, #fffefe 0%, #fff8fa 50%, #fffdfd 100%);

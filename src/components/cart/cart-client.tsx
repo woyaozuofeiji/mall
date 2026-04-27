@@ -55,11 +55,11 @@ export function CartClient({ locale, dictionary }: { locale: Locale; dictionary:
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 rounded-full border border-[rgba(241,203,213,0.9)] bg-[#fffdfd] px-3 py-2">
-                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-lg text-[#6d6670]">
+                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label={locale === "zh" ? "减少数量" : "Decrease quantity"} className="text-lg text-[#6d6670]">
                     -
                   </button>
                   <span className="min-w-6 text-center text-sm font-medium text-[#2f2b32]">{item.quantity}</span>
-                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-lg text-[#6d6670]">
+                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label={locale === "zh" ? "增加数量" : "Increase quantity"} className="text-lg text-[#6d6670]">
                     +
                   </button>
                 </div>

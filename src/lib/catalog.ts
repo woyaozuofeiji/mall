@@ -49,9 +49,9 @@ type ProductSourcePayload = {
   };
   reviews?: Array<{
     id?: string;
-    title?: string;
+    title?: string | { en?: string; zh?: string };
     author?: string;
-    content?: string;
+    content?: string | { en?: string; zh?: string };
     rating?: number;
     date?: string;
     verified?: boolean;
@@ -90,9 +90,15 @@ function parseReviewItems(sourcePayload: ProductSourcePayload): ProductReview[] 
     .filter((review) => typeof review === "object" && review !== null)
     .map((review, index) => ({
       id: review.id ?? `review-${index + 1}`,
-      title: review.title ? localized(review.title, review.title) : undefined,
+      title: review.title
+        ? typeof review.title === "object"
+          ? localized(review.title.en, review.title.zh)
+          : localized(review.title, review.title)
+        : undefined,
       author: review.author?.trim() || "Verified customer",
-      content: localized(review.content, review.content),
+      content: typeof review.content === "object"
+        ? localized(review.content.en, review.content.zh)
+        : localized(review.content, review.content),
       rating: typeof review.rating === "number" ? review.rating : 5,
       date: review.date?.replace(/^Reviewed in .*? on /i, "").replace(/^Reviewed in .*? /i, "").trim() || undefined,
       verified: review.verified,

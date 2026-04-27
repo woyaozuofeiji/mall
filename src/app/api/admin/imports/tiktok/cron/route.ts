@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { runScheduledTikTokImports } from "@/lib/tiktok-imports";
@@ -11,15 +12,21 @@ async function readJsonBody(request: Request) {
   return JSON.parse(raw) as unknown;
 }
 
+function safeCompare(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  return aBuf.length === bBuf.length && timingSafeEqual(aBuf, bBuf);
+}
+
 function isAuthorized(request: Request) {
   const configuredSecret = process.env.TIKTOK_IMPORT_CRON_SECRET?.trim();
   if (!configuredSecret) {
     throw new Error("缺少 TIKTOK_IMPORT_CRON_SECRET，无法启用 TikTok 定时采集接口。");
   }
 
-  const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
-  const headerSecret = request.headers.get("x-cron-secret")?.trim();
-  return bearer === configuredSecret || headerSecret === configuredSecret;
+  const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
+  const headerSecret = request.headers.get("x-cron-secret")?.trim() ?? "";
+  return (bearer && safeCompare(bearer, configuredSecret)) || (headerSecret && safeCompare(headerSecret, configuredSecret));
 }
 
 function statusForError(error: unknown) {

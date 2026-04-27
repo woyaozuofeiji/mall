@@ -1,4 +1,7 @@
+"use client";
+
 import { Mail } from 'lucide-react';
+import type { FormEvent } from 'react';
 import type { Locale } from '@/lib/types';
 import { Container } from '@/components/ui/container';
 
@@ -32,9 +35,8 @@ export function HomeReferenceNewsletter({ locale }: { locale: Locale }) {
             </div>
           </div>
 
-          <form suppressHydrationWarning className='grid gap-3 sm:grid-cols-[1fr_auto]' action='#'>
+          <form className='grid gap-3 sm:grid-cols-[1fr_auto]' onSubmit={(e: FormEvent) => e.preventDefault()}>
             <input
-              suppressHydrationWarning
               type='email'
               placeholder={content.placeholder}
               className='h-14 rounded-full border border-[rgba(241,203,213,0.86)] bg-white px-5 text-[15px] text-[#2f2b32] outline-none placeholder:text-[#9a929d]'
