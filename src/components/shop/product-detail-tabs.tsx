@@ -43,11 +43,11 @@ export function ProductDetailTabs({ product, locale }: { product: Product; local
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#ff7e95]">{locale === "zh" ? "购买路径" : "Buying path"}</p>
-                <p className="mt-3 text-sm leading-7 text-[#6d6670]">{locale === "zh" ? "让用户先完成判断，再顺势进入规格和购买。" : "Keep the decision flow gentle: understand first, then choose variants and purchase."}</p>
+                <p className="mt-3 text-sm leading-7 text-[#6d6670]">{locale === "zh" ? "先了解风格、用途和细节，再选择合适规格加入购物车。" : "Review the style, use case and details first, then choose the right variant for your cart."}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#ff7e95]">{locale === 'zh' ? '服务信息' : 'Service layer'}</p>
-                <p className="mt-3 text-sm leading-7 text-[#6d6670]">{locale === 'zh' ? '评论、支付、物流与售后信息都会在这一套详情结构里保持清晰呈现。' : 'Reviews, payment, logistics and after-sales information all stay clearly organized within this product page structure.'}</p>
+                <p className="mt-3 text-sm leading-7 text-[#6d6670]">{locale === 'zh' ? '付款、物流、客服与售后信息都可以在下单前清楚确认。' : 'Payment, shipping, customer care and return details are easy to review before checkout.'}</p>
               </div>
             </div>
             <div className="rounded-[1.6rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-5 ring-1 ring-[rgba(241,225,230,0.95)]">
@@ -106,13 +106,13 @@ export function ProductDetailTabs({ product, locale }: { product: Product; local
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#ff7e95]">{locale === "zh" ? "交付预期" : "Delivery expectation"}</p>
                 <p className="mt-3 text-sm leading-7 text-[#6d6670]">
-                  {locale === 'zh' ? '发货说明会与当前订单状态同步，物流更新和税费提示可在这一层清晰承接。' : 'Shipping guidance stays aligned with the active order flow, and logistics or tax updates can be surfaced cleanly in this layer.'}
+                  {locale === 'zh' ? '发货说明、物流更新和税费提示会随订单状态更新，方便你持续确认进度。' : 'Shipping guidance, logistics updates and tax notes are updated with the order status so you can keep checking progress.'}
                 </p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[#ff7e95]">{locale === "zh" ? "售后规则" : "After-sales policy"}</p>
                 <p className="mt-3 text-sm leading-7 text-[#6d6670]">
-                  {locale === "zh" ? "这里可以继续补充退换说明、客服响应时间和包装保障。" : "This area can continue to grow with return notes, support timing and packaging promises."}
+                  {locale === "zh" ? "退换说明、客服响应时间和包装保障会在下单前保持清楚可查。" : "Return notes, support timing and packaging promises are kept easy to review before checkout."}
                 </p>
               </div>
             </div>
@@ -173,8 +173,8 @@ export function ProductDetailTabs({ product, locale }: { product: Product; local
             ) : (
               <div className="rounded-[1.6rem] bg-white p-5 text-sm leading-8 text-[#6d6670] shadow-[0_20px_50px_-38px_rgba(214,187,198,0.72)] ring-1 ring-[rgba(241,225,230,0.95)]">
                 {locale === "zh"
-                  ? "当前这件商品还没有可展示的抓取评论，后续重新采集或补充评论后会显示在这里。"
-                  : "No imported review cards are available for this product yet. Re-import or refresh marketplace reviews to populate this section."}
+                  ? "当前这件商品还没有可展示的客户评价，新的反馈会在确认后更新到这里。"
+                  : "No customer review cards are available for this product yet. New feedback will appear here after it is confirmed."}
               </div>
             )}
           </div>

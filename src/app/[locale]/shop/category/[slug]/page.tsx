@@ -83,8 +83,8 @@ export async function generateMetadata({
     : copy.title;
   const description =
     locale === "zh"
-      ? `${copy.description} 当前分类共 ${shop.pagination.totalCount} 款已发布商品，适合 ${copy.useCases.slice(0, 2).join("、")} 等场景。`
-      : `${copy.description} This collection currently includes ${shop.pagination.totalCount} published products and works especially well for ${copy.useCases.slice(0, 2).join(" and ")}.`;
+      ? `${copy.description} 当前分类共 ${shop.pagination.totalCount} 款在售商品，适合 ${copy.useCases.slice(0, 2).join("、")} 等场景。`
+      : `${copy.description} This collection currently includes ${shop.pagination.totalCount} available products and works especially well for ${copy.useCases.slice(0, 2).join(" and ")}.`;
 
   return buildPageMetadata({
     locale,
@@ -215,8 +215,8 @@ export default async function CategoryLandingPage({
                 </p>
                 <p className="mt-2 hidden max-w-3xl text-sm leading-7 text-[#6d6670] sm:block">
                   {locale === "zh"
-                    ? `当前分类共 ${pagination.totalCount} 款已发布商品，每页展示 ${CATEGORY_PAGE_SIZE} 款；完整的分类说明、选购建议和使用场景已放到页面底部。`
-                    : `This collection currently includes ${pagination.totalCount} published items, with ${CATEGORY_PAGE_SIZE} products per page. Full collection notes, buying tips, and use cases are placed lower on the page.`}
+                    ? `当前分类共 ${pagination.totalCount} 款在售商品，你可以继续浏览商品，也可以查看下方的分类说明、选购建议和使用场景。`
+                    : `This collection currently includes ${pagination.totalCount} available items. Continue browsing products or review collection notes, buying tips and use cases below.`}
                 </p>
               </div>
             </div>
@@ -243,7 +243,7 @@ export default async function CategoryLandingPage({
               <p className="mt-2 text-sm leading-7 text-[#2f2b32]">{copy.title}</p>
             </div>
             <div className="rounded-[1.25rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] px-4 py-4 ring-1 ring-[rgba(241,225,230,0.95)]">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff7e95]">{locale === "zh" ? "当前规模" : "Published count"}</p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#ff7e95]">{locale === "zh" ? "在售数量" : "Available count"}</p>
               <p className="mt-2 text-sm leading-7 text-[#2f2b32]">
                 {locale === "zh" ? `${pagination.totalCount} 款在售商品` : `${pagination.totalCount} live products in this collection`}
               </p>
@@ -356,8 +356,8 @@ export default async function CategoryLandingPage({
               <p className="text-[2rem] font-semibold tracking-[-0.03em] text-[#2f2b32]">{dictionary.common.empty}</p>
               <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#6d6670]">
                 {locale === "zh"
-                  ? "当前分类下暂无已发布商品，可先返回总商品页继续浏览。"
-                  : "There are no published products in this collection right now. You can return to the shop to keep browsing."}
+                  ? "当前分类下暂无在售商品，可先返回总商品页继续浏览。"
+                  : "There are no available products in this collection right now. You can return to the shop to keep browsing."}
               </p>
             </StorefrontPanel>
           )}

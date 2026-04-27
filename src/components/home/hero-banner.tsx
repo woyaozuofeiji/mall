@@ -38,29 +38,29 @@ export function HeroBanner({
       ? [
           {
             title: "编辑式选品",
-            description: "不是铺货页，而是更像精品站的少量精选与陈列逻辑。",
+            description: "少量精选毛绒、饰品和桌面小物，适合送礼、自留和收藏。",
           },
           {
-            title: "双语体验",
-            description: "首页到结算链路统一调性，适合后续做英文投放与自然流量。",
+            title: "清晰购物体验",
+            description: "从商品详情、购物车到支付和订单查询，每一步都方便确认。",
           },
           {
-            title: "可扩展交易结构",
-            description: "先完成高质量展示与下单，再逐步补支付、邮件和会员体系。",
+            title: "安心服务信息",
+            description: "配送、退换、客服和订单进度都可以在下单前后清楚查看。",
           },
         ]
       : [
           {
             title: "Editorial curation",
-            description: "The homepage feels closer to a boutique landing experience than a generic catalog grid.",
+            description: "A focused edit of plush toys, jewelry and desk gifts for giving, keeping and collecting.",
           },
           {
-            title: "Bilingual storefront",
-            description: "The same premium rhythm now carries from landing sections to shop and checkout flows.",
+            title: "Clear shopping flow",
+            description: "Product details, cart, payment and order tracking are arranged for easy review.",
           },
           {
-            title: "Built to scale later",
-            description: "You can add payments, CRM and lifecycle automation after the visual foundation is right.",
+            title: "Service details up front",
+            description: "Shipping, returns, customer care and order updates are easy to check before and after purchase.",
           },
         ];
 
@@ -72,23 +72,23 @@ export function HeroBanner({
   const signatureNote =
     locale === "zh"
       ? {
-          quote: "首页如果想更像精品品牌官网，最重要的是先稳住主视觉和节奏。",
-          note: "让每个版块都像一个被精心命名的系列章节。",
+          quote: "一件合适的小礼物，往往来自清楚的场景、细节和心意。",
+          note: "从新品到精选，每个版块都围绕真实送礼场景整理。",
         }
       : {
-          quote: "To feel more like a boutique brand website, the homepage needs a steadier visual anchor and rhythm first.",
-          note: "Let each section read like a deliberately named editorial chapter.",
+          quote: "A thoughtful small gift starts with a clear moment, useful details and a little care.",
+          note: "From new arrivals to featured picks, each section is shaped around real gifting occasions.",
         };
 
   const heroNote =
     locale === "zh"
       ? {
-          eyebrow: "本期主视觉",
-          title: "把首页做成更像品牌画册，而不只是商品入口。",
+          eyebrow: "本期精选",
+          title: "为送礼、自留和收藏挑选更有心意的好物。",
           description:
-            "这一版把主推商品、视觉节奏和信任信息放在同一个首屏里，让用户第一眼就感受到“精选”和“品质感”。",
-          secondaryTitle: "同步展示上新与陈列方向",
-          secondaryDescription: "首屏除了卖货，也应该顺带建立品牌语气、选品偏好和审美门槛。",
+            "从柔软毛绒到精致饰品，再到桌面小礼物，每个推荐都围绕真实使用和送礼场景展开。",
+          secondaryTitle: "最近上新与精选陈列",
+          secondaryDescription: "快速查看近期值得关注的商品，也可以继续进入分类慢慢挑选。",
           productLabel: "主推商品",
           arrivalLabel: "本周上新",
           viewLabel: "查看商品",
@@ -97,13 +97,13 @@ export function HeroBanner({
           noteLabel: "Private edit",
         }
       : {
-          eyebrow: "Hero composition",
-          title: "Make the landing screen feel like a brand editorial, not only a storefront entry point.",
+          eyebrow: "Featured this season",
+          title: "Thoughtful pieces for gifting, keeping, and collecting.",
           description:
-            "This revision merges signature merchandise, visual atmosphere and trust cues into a single premium first-screen composition.",
-          secondaryTitle: "Show the visual direction and the latest edit together",
+            "From soft plush to refined jewelry and small desk gifts, each pick is selected around real gifting and everyday-use moments.",
+          secondaryTitle: "Recent arrivals and featured picks",
           secondaryDescription:
-            "The hero should sell products, but it should also instantly signal curation, tone and merchandising discipline.",
+            "Preview the latest pieces worth noticing, or continue into a collection to browse at your own pace.",
           productLabel: "Signature pick",
           arrivalLabel: "Fresh arrival",
           viewLabel: "View product",
@@ -299,7 +299,7 @@ export function HeroBanner({
                   <div className="flex min-h-[34rem] flex-col justify-end p-8 text-white">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/60">{heroNote.productLabel}</p>
                     <h3 className="mt-4 font-serif text-[2.5rem] leading-none">
-                      {locale === "zh" ? "先把首页气质做出来，再继续往下搭。" : "Nail the landing atmosphere first, then scale the rest of the storefront."}
+                      {locale === "zh" ? "先从本期精选开始，找到适合当下心意的选择。" : "Start with this edit and find a piece that fits the moment."}
                     </h3>
                   </div>
                 )}

@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: locale === "zh" ? "选购指南与礼物灵感" : "Buying Guides & Gift Ideas",
     description:
       locale === "zh"
-        ? "浏览毛绒玩偶、饰品和桌面礼品的选购指南，帮助用户在下单前更快理解商品和送礼场景。"
+        ? "浏览毛绒玩偶、饰品和桌面礼品的选购指南，帮助你在下单前更快理解商品和送礼场景。"
         : "Explore buying guides for plush toys, jewelry and gift-ready accessories to help shoppers choose with more confidence.",
     keywords:
       locale === "zh"
@@ -82,8 +82,8 @@ export default async function GuidesIndexPage({ params }: { params: Promise<{ lo
         title={locale === "zh" ? "选购指南与送礼灵感" : "Buying guides and gift ideas"}
         description={
           locale === "zh"
-            ? "这些内容页帮助用户理解毛绒、饰品和轻礼品的选购重点，也能为搜索引擎提供更稳定的主题内容入口。"
-            : "These evergreen content pages explain how to choose plush toys, jewelry and compact gift items while giving search engines stronger topic-specific landing pages."
+            ? "从送礼场景、商品材质、包装和配送细节出发，帮你更轻松地做出选择。"
+            : "Explore gifting occasions, product materials, packaging details, and delivery planning before you choose."
         }
         side={
           <div className="space-y-4 text-[#6b6470]">
@@ -92,8 +92,8 @@ export default async function GuidesIndexPage({ params }: { params: Promise<{ lo
             </p>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? "内容围绕送礼场景、商品选择、包装运输和加购逻辑展开，适合持续补充成长尾流量入口。"
-                : "The guide hub focuses on gifting use cases, product selection, packaging, shipping expectations and add-on buying decisions for longer-tail search traffic."}
+                ? "内容围绕生日礼物、毛绒玩具、饰品护理、包装和异地送礼等场景整理，适合下单前快速参考。"
+                : "The guide hub covers birthday gifts, plush toys, jewelry care, packaging, and long-distance gifting for quick reference before checkout."}
             </p>
             <div className="flex flex-wrap gap-2">
               <StorefrontInfoPill>{locale === "zh" ? `${items.length} 篇指南` : `${items.length} guides`}</StorefrontInfoPill>

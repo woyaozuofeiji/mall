@@ -10,7 +10,7 @@ const faqs = {
     {
       question: 'Which payment methods are available?',
       answer:
-        'Orders can currently be completed with credit card. PayPal is under maintenance for now. Once payment is recorded, the order immediately moves into confirmation and fulfillment.',
+        'Orders can be completed with credit card. PayPal is temporarily unavailable. Once payment is recorded, the order immediately moves into confirmation and fulfillment.',
     },
     {
       question: 'How long does order processing take?',
@@ -20,7 +20,7 @@ const faqs = {
     {
       question: 'Which countries do you ship to?',
       answer:
-        'The storefront currently supports the United States, Canada, the United Kingdom, major EU destinations, Australia, New Zealand and selected Asian markets. Final availability is confirmed after your delivery address is entered at checkout.',
+        'We ship to the United States, Canada, the United Kingdom, major EU destinations, Australia, New Zealand and selected Asian markets. Final availability is confirmed after your delivery address is entered at checkout.',
     },
     {
       question: 'How can I track my shipment?',
@@ -40,12 +40,12 @@ const faqs = {
     {
       question: 'How are products selected?',
       answer:
-        'The catalog is kept intentionally curated through sourcing review, product cleanup and selective publishing, so the storefront stays premium instead of crowded.',
+        'We prioritize items that suit gifting, keeping and display, with attention to product finish, packaging friendliness and clear service details.',
     },
     {
       question: 'Why keep the assortment focused?',
       answer:
-        'A tighter assortment supports stronger storytelling, cleaner merchandising and a more premium gifting experience than an oversized catalog.',
+        'A focused assortment reduces decision fatigue and makes it easier to find the right piece for a specific gift moment.',
     },
   ],
   zh: [
@@ -75,11 +75,11 @@ const faqs = {
     },
     {
       question: '商品是怎么选出来的？',
-      answer: '商品库会经过选品、整理和发布审核，保持精品化陈列，而不是一次性堆满大量 SKU。',
+      answer: '我们会优先挑选适合送礼、自留和陈列的小物，关注商品质感、包装友好度和服务信息是否清楚。',
     },
     {
       question: '为什么商品数量保持精选？',
-      answer: '更聚焦的商品结构有助于建立送礼氛围、页面节奏和品牌质感，整体体验通常比铺货更好。',
+      answer: '更聚焦的商品范围能减少选择压力，也更容易围绕不同送礼场景找到合适的商品。',
     },
   ],
 } as const;
@@ -139,8 +139,8 @@ export default async function FaqPage({ params }: { params: Promise<{ locale: st
             </p>
             <p className='text-sm leading-7'>
               {locale === 'zh'
-                ? '这里集中回答支付方式、发货时效、订单状态和精选商品策略等高频问题，帮助用户在下单前减少疑问。'
-                : 'This page answers common questions about payment, delivery timing, order status and the store’s curated assortment so shoppers can buy with fewer uncertainties.'}
+                ? '这里集中回答支付方式、发货时效、订单状态和精选商品范围等高频问题，帮助你在下单前减少疑问。'
+                : 'This page answers common questions about payment, delivery timing, order status and the curated product range so you can buy with fewer uncertainties.'}
             </p>
           </div>
         }

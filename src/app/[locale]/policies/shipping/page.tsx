@@ -112,7 +112,7 @@ export default async function ShippingPolicyPage({ params }: { params: Promise<{
       title={locale === 'zh' ? '配送政策' : 'Shipping Policy'}
       intro={
         locale === 'zh'
-          ? '这里会明确说明处理时间、配送范围、运费、物流追踪、税费与国际订单事项，帮助用户在下单前建立清晰预期。'
+          ? '这里会明确说明处理时间、配送范围、运费、物流追踪、税费与国际订单事项，帮助你在下单前建立清晰预期。'
           : 'This page covers processing time, delivery regions, shipping fees, tracking updates, taxes and key international-order expectations before purchase.'
       }
       points={[]}

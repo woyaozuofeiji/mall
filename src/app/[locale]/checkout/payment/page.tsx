@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from 'next/link';
+import { headers } from "next/headers";
 import { findOrderByLookup } from '@/lib/orders';
 import { formatDateTime } from '@/lib/format';
 import { getDictionary, isLocale } from '@/lib/i18n';
+import { claimPromotionDiscountForOrder, getClientIpFromHeaders } from "@/lib/ip-promotion";
 import { getOrderStatusMeta } from '@/lib/order-status';
 import type { PaymentMethod } from '@/lib/payment-methods';
 import { buildPageMetadata } from "@/lib/seo";
@@ -54,6 +56,15 @@ export default async function CheckoutPaymentPage({
   const emailValue = email?.trim() ?? '';
   const initialMethod = method === 'card' || method === 'paypal' ? (method as PaymentMethod) : undefined;
   const hasLookup = Boolean(orderNumber && emailValue);
+  if (hasLookup) {
+    const requestHeaders = await headers();
+    await claimPromotionDiscountForOrder({
+      ipAddress: getClientIpFromHeaders(requestHeaders),
+      orderNumber,
+      email: emailValue,
+    });
+  }
+
   const result = hasLookup ? await findOrderByLookup(orderNumber, emailValue) : null;
   const statusMeta = result ? getOrderStatusMeta(result.status, locale) : null;
 
@@ -94,8 +105,8 @@ export default async function CheckoutPaymentPage({
             </p>
             <p className='text-sm leading-7'>
               {locale === 'zh'
-                ? '付款页会根据订单当前状态自动切换：待付款订单可继续结算，已付款订单则直接展示最新处理进度。'
-                : 'This page adapts to the order state automatically: payable orders can continue checkout here, while paid orders show the latest processing status instead.'}
+                ? '请在确认订单信息后完成付款。付款完成后，你可以继续查看订单处理与物流进度。'
+                : 'Review your order details, then complete payment. After payment, you can continue tracking processing and delivery updates.'}
             </p>
           </div>
         }

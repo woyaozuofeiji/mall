@@ -162,6 +162,23 @@ model Order {
   shipments      Shipment[]
 }
 
+model IpPromotionActivity {
+  id                String    @id @default(cuid())
+  ipAddress         String    @unique
+  firstSeenAt       DateTime  @default(now())
+  offerExpiresAt    DateTime
+  cooldownExpiresAt DateTime
+  claimedAt         DateTime?
+  usedAt            DateTime?
+  orderNumber       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([offerExpiresAt])
+  @@index([cooldownExpiresAt])
+  @@index([orderNumber])
+}
+
 model OrderItem {
   id          String          @id @default(cuid())
   orderId     String

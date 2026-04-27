@@ -26,15 +26,15 @@ const copy: Record<
 > = {
   en: {
     eyebrow: "Browse collections",
-    title: "A simpler way to start shopping",
+    title: "Find the right gift by mood and moment",
     description:
-      "We trimmed this section down to the three real storefront categories, with less noise and no distracting collage imagery.",
+      "Start with soft plush, refined jewelry, or thoughtful desk gifts, then move quickly into the collection that best matches the person you have in mind.",
     viewAllLabel: "Shop all",
     cardCta: "Open collection",
     cards: [
       {
         title: "Plush Toys",
-        description: "Soft companions, cozy shelf pieces, and gift-friendly picks with a lighter, sweeter storefront feel.",
+        description: "Soft companions, cozy shelf pieces, and easy gift picks for birthdays, care packages, and everyday comfort.",
         href: "/shop/category/plush",
         tags: ["Soft gifts", "Cute display", "Easy pick"],
         icon: Sparkles,
@@ -44,7 +44,7 @@ const copy: Record<
       },
       {
         title: "Jewelry",
-        description: "A focused edit of necklaces, earrings, rings, and bracelets without repeating subcategory cards.",
+        description: "Necklaces, earrings, rings, and bracelets selected for daily wear, small celebrations, and polished gifting.",
         href: "/shop/category/jewelry",
         tags: ["Necklaces", "Earrings", "Bracelets"],
         icon: Gem,
@@ -54,7 +54,7 @@ const copy: Record<
       },
       {
         title: "Desk Gifts",
-        description: "Small decor and gift-ready extras for a tidy lifestyle section that feels cleaner than before.",
+        description: "Small decor, charming keepsakes, and gift-ready extras for desks, shelves, and thoughtful add-ons.",
         href: "/shop/category/gifts",
         tags: ["Desk accents", "Gift-ready", "Small extras"],
         icon: Gift,
@@ -65,15 +65,15 @@ const copy: Record<
     ],
   },
   zh: {
-    eyebrow: "核心分类",
-    title: "把入口缩减到 3 个真正需要的分类",
-    description: "这一块改成更干净的极简卡片，只保留店里真实存在的核心分类，不再堆很多重复子类和配图。",
+    eyebrow: "精选分类",
+    title: "按心意找到合适的礼物",
+    description: "从柔软毛绒、精致饰品到桌面小礼物，三个清晰方向帮助你更快找到适合送礼或自留的选择。",
     viewAllLabel: "查看全部",
     cardCta: "进入分类",
     cards: [
       {
         title: "毛绒玩具",
-        description: "主打柔软陪伴、可爱陈列和轻礼物场景，让首页入口更轻松，不再靠杂乱图片硬撑氛围。",
+        description: "柔软陪伴、可爱陈列和轻松送礼都适合，从床头摆件到生日惊喜都能快速挑选。",
         href: "/shop/category/plush",
         tags: ["柔软礼物", "可爱陈列", "轻松入手"],
         icon: Sparkles,
@@ -83,7 +83,7 @@ const copy: Record<
       },
       {
         title: "饰品首饰",
-        description: "只用一个入口承接项链、耳环、戒指、手链，避免之前那种看起来很多、实际跳同一路由的重复卡片。",
+        description: "项链、耳环、戒指与手链集中呈现，适合挑选日常佩戴和精致小礼物。",
         href: "/shop/category/jewelry",
         tags: ["项链", "耳环", "手链"],
         icon: Gem,
@@ -93,7 +93,7 @@ const copy: Record<
       },
       {
         title: "桌面礼物",
-        description: "保留桌面小物和送礼向商品的集中入口，让分类更清楚，也和整体精品店气质更贴近。",
+        description: "桌面小物、包装友好的轻礼品和加购好物集中展示，适合生日、感谢和节日心意。",
         href: "/shop/category/gifts",
         tags: ["桌面点缀", "送礼友好", "小件好物"],
         icon: Gift,

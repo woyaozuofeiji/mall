@@ -34,7 +34,17 @@ export interface PaymentOrderSummary {
   address: string;
   postalCode: string;
   note: string | null;
+  subtotal: number;
   totalAmount: number;
+  promotionDiscount: {
+    campaign: string;
+    label: "one_tenth_card";
+    rate: number;
+    originalSubtotal: number;
+    discountedTotal: number;
+    discountAmount: number;
+    claimedAt: string;
+  } | null;
   createdAt: string;
   items: Array<{
     id: string;
@@ -169,6 +179,7 @@ export function PaymentExperience({
   const [didAttemptCardSubmit, setDidAttemptCardSubmit] = useState(false);
   const [focusedField, setFocusedField] = useState<FocusedField>(null);
   const [mounted, setMounted] = useState(false);
+  const [showPrizeBurst, setShowPrizeBurst] = useState(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -179,6 +190,24 @@ export function PaymentExperience({
       window.cancelAnimationFrame(frame);
     };
   }, []);
+
+  useEffect(() => {
+    if (!order.promotionDiscount) {
+      return;
+    }
+
+    const startTimer = window.setTimeout(() => {
+      setShowPrizeBurst(true);
+    }, 180);
+    const endTimer = window.setTimeout(() => {
+      setShowPrizeBurst(false);
+    }, 3600);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(endTimer);
+    };
+  }, [order.promotionDiscount]);
 
   const copy = useMemo(
     () =>
@@ -247,6 +276,11 @@ export function PaymentExperience({
             statusPanelDescription: '这笔订单当前仍在等待付款确认。只有在付款完成后，系统才会开始备货与发货安排。',
             submittedAt: '订单创建时间',
             amountDue: '待支付金额',
+            originalAmount: '原订单金额',
+            promotionPrize: '非常幸运，抽到了 1 折卡',
+            promotionDescription: '本订单已按活动权益自动改为 1 折结算。请在倒计时结束前完成付款，优惠才会最终生效。',
+            promotionOneChance: '请注意：这是仅此一次的活动机会。如果返回上一页、离开付款页或取消订单，当前 1 折权益将视为自动放弃。',
+            promotionSavings: '已优惠',
             submitError: '付款未能完成，请稍后再试或更换支付方式。',
           }
         : {
@@ -317,6 +351,11 @@ export function PaymentExperience({
             statusPanelDescription: 'This order is still waiting for payment confirmation. Fulfillment starts only after payment has been completed successfully.',
             submittedAt: 'Order created at',
             amountDue: 'Amount due',
+            originalAmount: 'Original amount',
+            promotionPrize: 'You got lucky: 90% off card unlocked',
+            promotionDescription: 'This order has been automatically adjusted to 10% of the original amount. Complete payment before the countdown ends to keep the benefit.',
+            promotionOneChance: 'Please note: this is a one-time campaign opportunity. Going back, leaving the payment page or cancelling the order counts as giving up the current 90% discount.',
+            promotionSavings: 'Savings',
             submitError: 'We could not complete payment. Please try again or choose another method.',
           },
     [locale, paypalAvailable, paypalMaintenanceMessage],
@@ -348,6 +387,7 @@ export function PaymentExperience({
 
   const showCardErrors = didAttemptCardSubmit;
   const cardFormValid = Object.values(cardErrors).every((error) => error === null);
+  const promotionDiscount = order.promotionDiscount;
 
   const updateMethodInUrl = (method?: PaymentMethod) => {
     const params = new URLSearchParams({
@@ -512,9 +552,81 @@ export function PaymentExperience({
     },
   ];
 
+  const promotionPrizeCard = promotionDiscount ? (
+    <StorefrontPanel className="promotion-prize-card relative overflow-hidden p-0">
+      <div className="promotion-prize-shimmer absolute inset-0 opacity-80" />
+      <div className="relative grid gap-0 lg:grid-cols-[1fr_auto] lg:items-stretch">
+        <div className="p-5 sm:p-6 xl:p-7">
+          <div className="flex items-start gap-3">
+            <span className="promotion-prize-icon relative inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.72)]">
+              <span className="absolute inset-0 rounded-full bg-[#ff7e95]/18" />
+              <Sparkles className="relative h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#ff6d88]">{copy.promotionPrize}</p>
+              <h3 className="mt-2 text-[1.65rem] font-semibold leading-tight text-[#2f2b32] sm:text-[2.1rem]">
+                {formatCurrency(promotionDiscount.discountedTotal, locale)}
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-[#6d6670]">{copy.promotionDescription}</p>
+              <p className="mt-2 text-sm font-medium leading-7 text-[#b24b64]">{copy.promotionOneChance}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 border-t border-[rgba(241,225,230,0.95)] p-5 sm:grid-cols-3 lg:min-w-[19rem] lg:grid-cols-1 lg:border-l lg:border-t-0 lg:p-6">
+          <div className="rounded-[1.2rem] bg-white/88 px-4 py-3 ring-1 ring-[rgba(241,225,230,0.95)]">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#8f8791]">{copy.originalAmount}</p>
+            <p className="mt-2 text-sm font-semibold text-[#8f8791] line-through">
+              {formatCurrency(promotionDiscount.originalSubtotal, locale)}
+            </p>
+          </div>
+          <div className="rounded-[1.2rem] bg-white/88 px-4 py-3 ring-1 ring-[rgba(241,225,230,0.95)]">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#8f8791]">{copy.promotionSavings}</p>
+            <p className="mt-2 text-sm font-semibold text-[#ff6d88]">
+              -{formatCurrency(promotionDiscount.discountAmount, locale)}
+            </p>
+          </div>
+          <div className="rounded-[1.2rem] bg-[#2f2b32] px-4 py-3 text-white ring-1 ring-[#2f2b32]">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">{copy.amountDue}</p>
+            <p className="mt-2 text-base font-semibold text-white">
+              {formatCurrency(promotionDiscount.discountedTotal, locale)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </StorefrontPanel>
+  ) : null;
+
+  const prizeBurst = showPrizeBurst ? (
+    <div className="promotion-prize-burst pointer-events-none fixed inset-0 z-50" aria-hidden="true">
+      <div className="promotion-prize-burst-center">
+        <span className="promotion-prize-ring" />
+        <span className="promotion-prize-ring promotion-prize-ring-delay" />
+        <Sparkles className="promotion-prize-burst-sparkle" />
+      </div>
+      {Array.from({ length: 28 }).map((_, index) => (
+        <span
+          key={index}
+          className="promotion-confetti"
+          style={
+            {
+              "--promotion-confetti-index": index,
+              "--promotion-confetti-x": `${Math.cos((index / 28) * Math.PI * 2) * (120 + (index % 5) * 22)}px`,
+              "--promotion-confetti-y": `${Math.sin((index / 28) * Math.PI * 2) * (100 + (index % 4) * 26)}px`,
+              "--promotion-confetti-rotate": `${index * 23 + 60}deg`,
+              "--promotion-confetti-delay": `${(index % 7) * 42}ms`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  ) : null;
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr] xl:items-start">
-      <StorefrontPanel className="order-2 p-5 sm:p-6 xl:order-1 xl:sticky xl:top-28 xl:h-fit xl:p-7">
+    <>
+      {prizeBurst}
+      <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr] xl:items-start">
+        <StorefrontPanel className="order-2 p-5 sm:p-6 xl:order-1 xl:sticky xl:top-28 xl:h-fit xl:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]">{copy.orderSummary}</p>
@@ -614,54 +726,58 @@ export function PaymentExperience({
           </p>
           {order.note ? <p className="mt-3 text-sm leading-7 text-[#6d6670]">{order.note}</p> : null}
         </div>
-      </StorefrontPanel>
-
-      <div className="order-1 space-y-6 xl:order-2">
-        <StorefrontPanel className="p-5 sm:p-6 xl:p-7">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]">{copy.paymentPanel}</p>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {methodCards.map((method) => {
-              const active = selectedMethod === method.key;
-              const available = isPaymentMethodAvailable(method.key);
-              return (
-                <button
-                  key={method.key}
-                  type="button"
-                  onClick={() => chooseMethod(method.key)}
-                  disabled={activeMethod !== null}
-                  className={cn(
-                    "rounded-[1.5rem] border p-5 text-left transition",
-                    active
-                      ? "border-[rgba(255,126,149,0.62)] bg-[linear-gradient(180deg,#fff4f7_0%,#fffdfd_100%)] shadow-[0_24px_60px_-42px_rgba(255,109,136,0.4)]"
-                      : "border-[rgba(241,225,230,0.95)] bg-white hover:border-[rgba(255,126,149,0.42)]",
-                    activeMethod !== null && "cursor-wait opacity-70",
-                    !available && "border-dashed",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
-                      {method.icon}
-                    </span>
-                    {!available ? (
-                      <span className="inline-flex rounded-full bg-[#fff3f6] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
-                        {copy.maintenanceBadge}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-4 text-[1.15rem] font-semibold text-[#2f2b32]">{method.title}</p>
-                  <p className="mt-2 text-sm leading-7 text-[#6d6670]">{method.description}</p>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 rounded-[1.4rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-4 text-sm leading-7 text-[#6d6670] ring-1 ring-[rgba(241,225,230,0.95)]">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-1 h-4 w-4 text-[#ff7e95]" />
-              <span>{copy.secureNote}</span>
-            </div>
-          </div>
         </StorefrontPanel>
+
+        <div className="order-1 space-y-6 xl:order-2">
+        {promotionPrizeCard}
+
+        {selectedMethod === null ? (
+          <StorefrontPanel className="p-5 sm:p-6 xl:p-7">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#ff7e95]">{copy.paymentPanel}</p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {methodCards.map((method) => {
+                const active = selectedMethod === method.key;
+                const available = isPaymentMethodAvailable(method.key);
+                return (
+                  <button
+                    key={method.key}
+                    type="button"
+                    onClick={() => chooseMethod(method.key)}
+                    disabled={activeMethod !== null}
+                    className={cn(
+                      "rounded-[1.5rem] border p-5 text-left transition",
+                      active
+                        ? "border-[rgba(255,126,149,0.62)] bg-[linear-gradient(180deg,#fff4f7_0%,#fffdfd_100%)] shadow-[0_24px_60px_-42px_rgba(255,109,136,0.4)]"
+                        : "border-[rgba(241,225,230,0.95)] bg-white hover:border-[rgba(255,126,149,0.42)]",
+                      activeMethod !== null && "cursor-wait opacity-70",
+                      !available && "border-dashed",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff3f6] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
+                        {method.icon}
+                      </span>
+                      {!available ? (
+                        <span className="inline-flex rounded-full bg-[#fff3f6] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ff6d88] ring-1 ring-[rgba(248,192,205,0.62)]">
+                          {copy.maintenanceBadge}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-4 text-[1.15rem] font-semibold text-[#2f2b32]">{method.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-[#6d6670]">{method.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 rounded-[1.4rem] bg-[linear-gradient(180deg,#fff8fa_0%,#fffdfd_100%)] p-4 text-sm leading-7 text-[#6d6670] ring-1 ring-[rgba(241,225,230,0.95)]">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-1 h-4 w-4 text-[#ff7e95]" />
+                <span>{copy.secureNote}</span>
+              </div>
+            </div>
+          </StorefrontPanel>
+        ) : null}
 
         {submitError ? (
           <StorefrontPanel className="p-4 sm:p-5">
@@ -1024,7 +1140,8 @@ export function PaymentExperience({
             </div>
           </StorefrontPanel>
         ) : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

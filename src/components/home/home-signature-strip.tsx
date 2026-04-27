@@ -5,38 +5,38 @@ export function HomeSignatureStrip({ locale }: { locale: Locale }) {
   const content =
     locale === "zh"
       ? {
-          eyebrow: "品牌签名",
-          intro: "更像精品官网的首页，通常会先给人一种明确的陈列语气。",
+          eyebrow: "礼物挑选方向",
+          intro: "先确定心意和场景，再从清楚的分类里慢慢挑选。",
           items: [
             {
               label: "Seasonal edit",
-              value: "按季节与主题组织陈列，而不是按数量堆积。",
+              value: "按季节、节日和送礼对象整理适合的商品方向。",
             },
             {
               label: "Boutique rhythm",
-              value: "用留白、细线和主次关系建立更安静的高级感。",
+              value: "用清楚的商品图、描述和服务说明减少选择压力。",
             },
             {
               label: "Gift-led curation",
-              value: "让选品、包装与服务说明统一成一个品牌故事。",
+              value: "把选品、包装和配送信息放在一起，方便下单前确认。",
             },
           ],
         }
       : {
           eyebrow: "Atelier signature",
-          intro: "Boutique brand homepages usually establish a recognizable merchandising tone before they show everything else.",
+          intro: "Start with the occasion, then choose from clear gift-ready collections.",
           items: [
             {
               label: "Seasonal edit",
-              value: "Organize the assortment by mood and occasion, not by raw volume.",
+              value: "Browse by season, celebration and the person you are shopping for.",
             },
             {
               label: "Boutique rhythm",
-              value: "Use whitespace, fine dividers and stronger hierarchy to feel quieter and more premium.",
+              value: "Clear images, descriptions and service notes make choosing easier.",
             },
             {
               label: "Gift-led curation",
-              value: "Align products, packaging promise and service copy into one brand story.",
+              value: "Review products, packaging and delivery information together before checkout.",
             },
           ],
         };

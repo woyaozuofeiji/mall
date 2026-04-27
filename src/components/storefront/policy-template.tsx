@@ -43,8 +43,8 @@ export function PolicyTemplate({
             </p>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? "这些政策用于说明订单处理、发货、售后和数据使用规则，帮助用户在购买前明确服务边界。"
-                : "These policy pages explain order handling, shipping, after-sales support and data usage so customers can understand store expectations before purchasing."}
+                ? "这些政策说明订单处理、发货、售后和数据使用规则，方便你在购买前确认服务细节。"
+                : "These policy pages explain order handling, shipping, after-sales support and data usage so you can review service details before purchasing."}
             </p>
           </div>
         }

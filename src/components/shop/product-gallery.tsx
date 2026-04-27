@@ -39,7 +39,7 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
         curation: "桌面端体验",
         curationText: "桌面端采用左侧缩略图、右侧主图的标准商品图布局。",
         focus: "购买判断",
-        focusText: "让用户先看图、再看价格与购买信息，路径更清晰。",
+        focusText: "先看清图片细节，再确认价格与购买信息。",
       }
     : {
         gallery: "Gallery view",
@@ -52,9 +52,9 @@ export function ProductGallery({ product, locale }: { product: Product; locale: 
         detailShots: "Layered gallery",
         detailShotsText: "Hero, detail and lifestyle images are separated more clearly.",
         curation: "Desktop layout",
-        curationText: "Desktop now follows a standard thumbnail rail plus hero image pattern.",
+        curationText: "Desktop uses a thumbnail rail with a large main product image.",
         focus: "Decision flow",
-        focusText: "Let shoppers evaluate visuals first, then move directly into pricing and purchase.",
+        focusText: "Review the visuals first, then continue to pricing and purchase details.",
       };
 
   const moveTo = useCallback(

@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_PRICE_VALID_UNTIL = "2026-12-31";
+
 const getProductBySlugCached = cache(getProductBySlug);
 
 function getSchemaAvailability(value?: string) {
@@ -100,6 +102,104 @@ export default async function ProductDetailPage({
   const discountPercent = getDiscountPercent(product.price, product.compareAtPrice);
   const productUrl = absoluteUrl(`/${locale}/shop/${product.slug}`);
   const productDescription = buildProductMetaDescription(product, locale);
+  const offerShippingDetails = {
+    "@type": "OfferShippingDetails",
+    shippingDestination: {
+      "@type": "DefinedRegion",
+      addressCountry: ["US", "CA", "GB", "AU", "NZ"],
+    },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: {
+        "@type": "QuantitativeValue",
+        minValue: 1,
+        maxValue: 3,
+        unitCode: "DAY",
+      },
+      transitTime: {
+        "@type": "QuantitativeValue",
+        minValue: 5,
+        maxValue: 14,
+        unitCode: "DAY",
+      },
+    },
+  };
+  const merchantReturnPolicy = {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: ["US", "CA", "GB", "AU", "NZ"],
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 30,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/ReturnShippingFees",
+    url: absoluteUrl(`/${locale}/policies/returns`),
+  };
+  const productOffer = {
+    "@type": "Offer",
+    url: productUrl,
+    priceCurrency: "USD",
+    price: product.price.toFixed(2),
+    priceValidUntil: DEFAULT_PRICE_VALID_UNTIL,
+    availability: getSchemaAvailability(product.availability ? t(locale, product.availability) : undefined),
+    itemCondition: "https://schema.org/NewCondition",
+    seller: {
+      "@type": "Organization",
+      name: SITE_NAME,
+    },
+    shippingDetails: offerShippingDetails,
+    hasMerchantReturnPolicy: merchantReturnPolicy,
+  };
+  const productSchema = {
+    "@type": product.variants.length > 0 ? "ProductGroup" : "Product",
+    name: t(locale, product.name),
+    description: productDescription,
+    sku: product.sku ?? product.slug,
+    productGroupID: product.slug,
+    category: category ? t(locale, category.name) : product.categorySlug,
+    url: productUrl,
+    brand: {
+      "@type": "Brand",
+      name: SITE_NAME,
+    },
+    image: product.images.map((image) => absoluteUrl(image.url)),
+    ...(product.variants.length > 0
+      ? {
+          variesBy: ["https://schema.org/style"],
+          hasVariant: product.variants.map((variant) => ({
+            "@type": "Product",
+            name: `${t(locale, product.name)} - ${t(locale, variant.label)}`,
+            sku: variant.sku ?? `${product.slug}-${variant.id}`,
+            url: productUrl,
+            image: product.images.map((image) => absoluteUrl(image.url)),
+            offers: {
+              ...productOffer,
+              price: (variant.price ?? product.price).toFixed(2),
+              availability:
+                typeof variant.inventory === "number" && variant.inventory <= 0
+                  ? "https://schema.org/OutOfStock"
+                  : productOffer.availability,
+            },
+          })),
+        }
+      : {}),
+    ...(schemaDetails.material ? { material: schemaDetails.material } : {}),
+    ...(schemaDetails.size ? { size: schemaDetails.size } : {}),
+    offers: productOffer,
+    additionalProperty: schemaDetails.additionalProperty,
+    ...(schemaDetails.review.length > 0
+      ? {
+          review: schemaDetails.review,
+        }
+      : {}),
+    ...(product.reviewSummary
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.reviewSummary.rating.toFixed(1),
+            reviewCount: product.reviewSummary.count,
+          },
+        }
+      : {}),
+  };
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -132,48 +232,7 @@ export default async function ProductDetailPage({
           },
         ],
       },
-      {
-        "@type": "Product",
-        name: t(locale, product.name),
-        description: productDescription,
-        sku: product.sku ?? product.slug,
-        category: category ? t(locale, category.name) : product.categorySlug,
-        url: productUrl,
-        brand: {
-          "@type": "Brand",
-          name: SITE_NAME,
-        },
-        image: product.images.map((image) => absoluteUrl(image.url)),
-        ...(schemaDetails.material ? { material: schemaDetails.material } : {}),
-        ...(schemaDetails.size ? { size: schemaDetails.size } : {}),
-        offers: {
-          "@type": "Offer",
-          url: productUrl,
-          priceCurrency: "USD",
-          price: product.price.toFixed(2),
-          availability: getSchemaAvailability(product.availability ? t(locale, product.availability) : undefined),
-          itemCondition: "https://schema.org/NewCondition",
-          seller: {
-            "@type": "Organization",
-            name: SITE_NAME,
-          },
-        },
-        additionalProperty: schemaDetails.additionalProperty,
-        ...(schemaDetails.review.length > 0
-          ? {
-              review: schemaDetails.review,
-            }
-          : {}),
-        ...(product.reviewSummary
-          ? {
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: product.reviewSummary.rating.toFixed(1),
-                reviewCount: product.reviewSummary.count,
-              },
-            }
-          : {}),
-      },
+      productSchema,
     ],
   };
 
@@ -348,15 +407,15 @@ export default async function ProductDetailPage({
               <p>
                 {locale === "zh"
                   ? product.categorySlug === "plush"
-                    ? "毛绒类商品更依赖柔软手感、尺寸感知和礼物氛围，这件商品已经把材质、尺寸与包装信息前置展示，方便用户快速判断。"
+                    ? "毛绒类商品更依赖柔软手感、尺寸感知和礼物氛围，这件商品已经把材质、尺寸与包装信息清楚展示，方便你快速判断。"
                     : product.categorySlug === "jewelry"
-                      ? "饰品类商品更强调近景质感、佩戴场景和礼盒感，这件商品将材质、尺寸与礼品包装信息集中展示，更利于转化。"
-                      : "礼物和生活方式小物更看重用途明确、体积友好和搭配空间，这件商品更适合做轻加购或组合推荐。"
+                      ? "饰品类商品更强调近景质感、佩戴场景和礼盒感，这件商品将材质、尺寸与礼品包装信息集中展示，便于下单前确认。"
+                      : "礼物和生活方式小物更看重用途明确、体积友好和搭配空间，这件商品适合作为轻加购或组合礼物的一部分。"
                   : product.categorySlug === "plush"
-                    ? "Plush products convert best when softness, scale and gifting atmosphere are easy to judge. This page surfaces those details early so the buying decision feels lighter."
+                    ? "Plush products are easier to choose when softness, scale and gifting atmosphere are easy to judge. This page keeps those details easy to review."
                     : product.categorySlug === "jewelry"
-                      ? "Jewelry products rely on close-up quality, wearability and gift-box appeal. This page brings material, sizing and packaging details forward to support conversion."
-                      : "Gift and lifestyle add-ons work best when usefulness, compact sizing and pairing potential are immediately clear. This page keeps those signals visible from the start."}
+                      ? "Jewelry products rely on close-up quality, wearability and gift-box appeal. This page keeps material, sizing and packaging details easy to review."
+                      : "Gift and lifestyle add-ons are easiest to choose when usefulness, compact sizing and pairing potential are immediately clear."}
               </p>
               <p>
                 {locale === "zh"
@@ -377,8 +436,8 @@ export default async function ProductDetailPage({
             </h2>
             <p className="max-w-3xl text-sm leading-8 text-[#6d6670]">
               {locale === "zh"
-                ? "在这里重点查看商品材质、尺寸、包装、配送说明和购买前需要确认的信息，帮助用户在下单前快速判断是否适合作为自用或送礼。"
-                : "Use this section to review material notes, dimensions, packaging, shipping guidance and the key details customers usually check before buying for themselves or as a gift."}
+                ? "在这里重点查看商品材质、尺寸、包装、配送说明和购买前需要确认的信息，方便下单前快速判断是否适合作为自用或送礼。"
+                : "Use this section to review material notes, dimensions, packaging, shipping guidance and the key details to check before buying for yourself or as a gift."}
             </p>
           </div>
           <ProductDetailTabs product={product} locale={locale} />

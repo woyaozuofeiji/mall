@@ -72,6 +72,35 @@ export default async function GuideDetailPage({
     Promise.resolve(getRelatedGuides("all", locale, guide.slug).slice(0, 2)),
     getProductsBySlugs(guide.relatedProductSlugs ?? []),
   ]);
+  const categoryLink =
+    guide.category === "general"
+      ? {
+          href: `/${locale}/shop`,
+          label: locale === "zh" ? "浏览全部分类入口" : "Browse all collections",
+          description:
+            locale === "zh"
+              ? "继续查看毛绒、饰品和礼品分类。"
+              : "Continue into plush, jewelry and gift collections.",
+        }
+      : {
+          href: `/${locale}/shop/category/${guide.category}`,
+          label:
+            locale === "zh"
+              ? guide.category === "plush"
+                ? "浏览毛绒玩具"
+                : guide.category === "jewelry"
+                  ? "浏览饰品首饰"
+                  : "浏览礼品小物"
+              : guide.category === "plush"
+                ? "Browse plush toys"
+                : guide.category === "jewelry"
+                  ? "Browse jewelry"
+                  : "Browse gift items",
+          description:
+            locale === "zh"
+              ? "查看与当前指南主题更接近的商品分类。"
+              : "Open the collection most closely related to this guide.",
+        };
   const guideUrl = absoluteUrl(`/${locale}/guides/${guide.slug}`);
   const structuredData = {
     "@context": "https://schema.org",
@@ -143,8 +172,8 @@ export default async function GuideDetailPage({
             </div>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? `发布时间 ${new Date(guide.publishedAt).toISOString().slice(0, 10)}，适合作为商品页、分类页和 FAQ 之外的补充内容入口。`
-                : `Published on ${new Date(guide.publishedAt).toISOString().slice(0, 10)}, this guide supports topic coverage beyond product, collection and FAQ pages.`}
+                ? `更新于 ${new Date(guide.publishedAt).toISOString().slice(0, 10)}，适合下单前快速了解选购、包装与配送细节。`
+                : `Updated on ${new Date(guide.publishedAt).toISOString().slice(0, 10)}. Use this guide to review buying, packaging and delivery details before checkout.`}
             </p>
           </div>
         }
@@ -197,6 +226,20 @@ export default async function GuideDetailPage({
           </StorefrontPanel>
 
           <div className="space-y-5">
+            <StorefrontPanel className="p-6 sm:p-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
+                {locale === "zh" ? "继续选购" : "Continue shopping"}
+              </p>
+              <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#2f2b32]">{categoryLink.label}</h2>
+              <p className="mt-3 text-sm leading-7 text-[#6d6670]">{categoryLink.description}</p>
+              <Link
+                href={categoryLink.href}
+                className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#2f2b32] px-5 text-sm font-medium text-white transition hover:bg-[#4a424c]"
+              >
+                {categoryLink.label}
+              </Link>
+            </StorefrontPanel>
+
             <StorefrontPanel className="p-6 sm:p-7">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ff7e95]">
                 {locale === "zh" ? "延伸阅读" : "Related reading"}

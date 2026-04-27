@@ -16,7 +16,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           shopLinks: [
             { href: `/${locale}/shop/category/plush`, label: "毛绒玩具" },
             { href: `/${locale}/shop/category/jewelry`, label: "饰品首饰" },
-            { href: `/${locale}/shop?sort=newest`, label: "新品上架" },
+            { href: `/${locale}/shop/new-arrivals`, label: "新品上架" },
             { href: `/${locale}/shop`, label: "热销推荐" },
             { href: `/${locale}/shop/category/gifts`, label: "送礼灵感" },
           ],
@@ -42,7 +42,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         }
       : {
           tagline: "Treasures for every day",
-          brandDescription: "A soft, giftable storefront for plush friends, delicate jewelry and charming little surprises.",
+          brandDescription: "A soft gift shop for plush friends, delicate jewelry and charming little surprises.",
           shop: "Shop",
           customer: "Customer Service",
           about: "About Us",
@@ -50,7 +50,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           shopLinks: [
             { href: `/${locale}/shop/category/plush`, label: "Plush Toys" },
             { href: `/${locale}/shop/category/jewelry`, label: "Jewelry" },
-            { href: `/${locale}/shop?sort=newest`, label: "New Arrivals" },
+            { href: `/${locale}/shop/new-arrivals`, label: "New Arrivals" },
             { href: `/${locale}/shop`, label: "Best Sellers" },
             { href: `/${locale}/shop/category/gifts`, label: "Gift Ideas" },
           ],

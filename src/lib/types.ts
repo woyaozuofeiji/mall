@@ -14,6 +14,9 @@ export interface Category {
 export interface ProductVariant {
   id: string;
   label: LocalizedText;
+  sku?: string;
+  price?: number;
+  inventory?: number | null;
 }
 
 export interface ProductSpec {

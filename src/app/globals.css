@@ -57,3 +57,204 @@ select {
 img {
   user-select: none;
 }
+
+@keyframes promotion-prize-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes promotion-prize-shimmer {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(160%) skewX(-18deg);
+  }
+}
+
+@keyframes promotion-prize-icon {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-3px) rotate(-7deg);
+  }
+  70% {
+    transform: translateY(1px) rotate(6deg);
+  }
+}
+
+@keyframes promotion-burst-fade {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes promotion-ring-pop {
+  0% {
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  75% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.45);
+  }
+}
+
+@keyframes promotion-burst-sparkle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.45) rotate(-18deg);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.18) rotate(8deg);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78) rotate(18deg);
+  }
+}
+
+@keyframes promotion-confetti-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.5);
+  }
+  12% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      translate(var(--promotion-confetti-x), var(--promotion-confetti-y))
+      rotate(var(--promotion-confetti-rotate))
+      scale(1);
+  }
+}
+
+.promotion-prize-card {
+  animation: promotion-prize-pop 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 126, 149, 0.16), transparent 28%),
+    linear-gradient(135deg, #fff4f7 0%, #fffdfd 56%, #f3fbff 100%);
+}
+
+.promotion-prize-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.78) 50%, transparent 100%);
+  width: 42%;
+  animation: promotion-prize-shimmer 1.6s ease-out 220ms both;
+}
+
+.promotion-prize-icon {
+  animation: promotion-prize-icon 1.8s ease-in-out 640ms 2;
+}
+
+.promotion-prize-burst {
+  animation: promotion-burst-fade 3.4s ease both;
+}
+
+.promotion-prize-burst-center {
+  position: fixed;
+  left: 50%;
+  top: min(38vh, 20rem);
+}
+
+.promotion-prize-ring {
+  position: fixed;
+  left: 50%;
+  top: min(38vh, 20rem);
+  width: min(52vw, 17rem);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 126, 149, 0.34);
+  box-shadow: 0 0 70px rgba(255, 126, 149, 0.16);
+  animation: promotion-ring-pop 1.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.promotion-prize-ring-delay {
+  animation-delay: 180ms;
+  border-color: rgba(95, 176, 210, 0.3);
+}
+
+.promotion-prize-burst-sparkle {
+  position: fixed;
+  left: 50%;
+  top: min(38vh, 20rem);
+  width: 4rem;
+  height: 4rem;
+  color: #ff6d88;
+  filter: drop-shadow(0 18px 30px rgba(255, 109, 136, 0.28));
+  animation: promotion-burst-sparkle 1.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.promotion-confetti {
+  position: fixed;
+  left: 50%;
+  top: min(38vh, 20rem);
+  width: 0.62rem;
+  height: 1.05rem;
+  border-radius: 0.18rem;
+  background: #ff7e95;
+  box-shadow: 0 12px 22px rgba(47, 43, 50, 0.08);
+  animation: promotion-confetti-burst 1.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--promotion-confetti-delay);
+}
+
+.promotion-confetti:nth-child(3n) {
+  background: #5fb0d2;
+}
+
+.promotion-confetti:nth-child(4n) {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  background: #ffd166;
+}
+
+.promotion-confetti:nth-child(5n) {
+  background: #8ad7b5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promotion-prize-card,
+  .promotion-prize-shimmer,
+  .promotion-prize-icon,
+  .promotion-prize-burst,
+  .promotion-prize-ring,
+  .promotion-prize-burst-sparkle,
+  .promotion-confetti {
+    animation: none;
+  }
+}

@@ -8,64 +8,64 @@ export function FeatureGrid({ locale }: { locale: Locale }) {
   const content =
     locale === "zh"
       ? {
-          eyebrow: "品牌体验框架",
-          title: "首页不只是好看，还要替后续运营留出空间。",
+          eyebrow: "为什么选择我们",
+          title: "从挑选到收货，每一步都更清楚。",
           description:
-            "这一块我改成了更像品牌方法论的展示方式：既讲视觉方向，也讲商品结构、转化路径和未来扩展能力，让首页从“漂亮”变成“更可信、更像成熟品牌站”。",
+            "我们把商品风格、服务说明和下单流程放在同一套清晰体验里，让你可以安心挑选礼物，也能随时确认订单进度。",
           metrics: [
-            { label: "陈列逻辑", value: "少而精" },
-            { label: "转化路径", value: "展示 → 下单" },
-            { label: "后续扩展", value: "支付 / 邮件 / 会员" },
+            { label: "选品方式", value: "少而精" },
+            { label: "下单流程", value: "浏览 → 支付" },
+            { label: "订单服务", value: "可查询" },
           ],
           features: [
             {
               step: "01",
-              title: "先建立审美门槛",
+              title: "有筛选的商品组合",
               description:
-                "把视觉、留白、图片比例和文案语气统一起来，首页会更像一个有主张的精品品牌，而不是普通模板商城。",
+                "毛绒、饰品和桌面礼物都围绕送礼、自用和陈列场景整理，减少无目的浏览。",
             },
             {
               step: "02",
-              title: "把选品策略显性化",
+              title: "清楚的商品与服务信息",
               description:
-                "通过分类入口、主推商品和上新结构，让用户理解你卖的不是“很多商品”，而是“有筛选后的商品”。",
+                "商品详情、发货说明、常见问题和售后政策都可以在下单前查看，减少沟通成本。",
             },
             {
               step: "03",
-              title: "给增长预留清晰接口",
+              title: "顺畅的支付与订单查询",
               description:
-                "现阶段先把品牌感和下单体验做顺，再逐步接入支付、邮件自动化和会员运营，不需要推倒重来。",
+                "确认收货信息后继续付款，付款完成即可通过订单查询页跟进处理与物流状态。",
             },
           ],
         }
       : {
-          eyebrow: "Experience framework",
-          title: "The homepage should look elevated, but it should also support future growth decisions.",
+          eyebrow: "Why shop with us",
+          title: "Clear choices, clear checkout, clear order updates.",
           description:
-            "This section reframes the value of the storefront: it explains the visual direction, the merchandising logic and the conversion path, which makes the homepage feel more like a mature brand system than a one-off landing page.",
+            "Our collections, service notes, and checkout flow are arranged so you can choose a thoughtful gift and review every important detail before payment.",
           metrics: [
-            { label: "Merchandising", value: "Curated edit" },
-            { label: "Conversion path", value: "Browse → request" },
-            { label: "Future layers", value: "Payments / CRM / loyalty" },
+            { label: "Curation", value: "Focused edit" },
+            { label: "Checkout path", value: "Browse → pay" },
+            { label: "Order support", value: "Trackable" },
           ],
           features: [
             {
               step: "01",
-              title: "Set a stronger aesthetic threshold",
+              title: "A focused product edit",
               description:
-                "Consistent spacing, image framing and copy rhythm make the storefront feel intentional and premium instead of template-driven.",
+                "Plush toys, jewelry, and desk gifts are organized around gifting, keeping, and display-friendly occasions.",
             },
             {
               step: "02",
-              title: "Make curation visible",
+              title: "Product and service details up front",
               description:
-                "Category entry points, signature products and new-arrival structures should communicate selection discipline, not catalog volume.",
+                "Product details, shipping notes, FAQs, and return policies are easy to review before you place an order.",
             },
             {
               step: "03",
-              title: "Keep clear room for scale",
+              title: "Smooth payment and order tracking",
               description:
-                "Once the brand feel and order flow are right, payment, lifecycle email and membership layers can be added without changing the foundation.",
+                "After confirming your address, continue to payment and use order tracking to follow processing and delivery updates.",
             },
           ],
         };

@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { CartProvider } from "@/components/providers/cart-provider";
 import { SetDocumentLang } from "@/components/providers/set-document-lang";
+import { IpPromotionClient } from "@/components/promotion/ip-promotion-client";
 import { getDictionary, isLocale, locales } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -31,6 +32,7 @@ export default async function LocaleLayout({
         <SiteHeader locale={locale} dictionary={{ brand: dictionary.common.brand, nav: dictionary.nav }} />
         <main>{children}</main>
         <SiteFooter locale={locale} />
+        <IpPromotionClient locale={locale} />
       </div>
     </CartProvider>
   );

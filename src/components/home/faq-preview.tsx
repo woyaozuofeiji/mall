@@ -8,52 +8,52 @@ export function FaqPreview({ locale }: { locale: Locale }) {
       ? {
           faqs: [
             {
-              question: "为什么首页里要放这么多“解释型”内容？",
+              question: "第一次购买前，应该先确认哪些信息？",
               answer:
-                "因为高客单、礼品感和跨境信任感，不是靠 SKU 数量建立的，而是靠你怎么介绍选品、发货、包装和服务边界。",
+                "建议先查看商品尺寸、材质、发货周期和售后政策。如果是送礼，也可以确认包装说明和预计送达时间。",
             },
             {
-              question: "无支付 MVP 会不会看起来不完整？",
+              question: "下单后可以在哪里查看进度？",
               answer:
-                "不会。只要页面视觉、商品结构和订单提交流程足够顺，用户会理解这是一个先验证需求、后补支付能力的阶段性版本。",
+                "付款完成后，你可以使用订单号和下单邮箱进入订单查询页，查看付款状态、处理进度和物流信息。",
             },
             {
-              question: "首页升级后，后续最适合补什么？",
+              question: "如果是送给别人，怎么挑更稳妥？",
               answer:
-                "优先补品牌图、节日专题页、社媒落地页和支付方式。这些能力会和新版首页的调性自然衔接。",
+                "可以优先选择尺寸清楚、风格不挑人、包装更友好的商品，例如毛绒玩偶、简约饰品或桌面小物。",
             },
           ],
           care: {
-            eyebrow: "体验补充",
-            title: "把 FAQ 做得更像品牌服务说明，而不是冷冰冰的帮助中心。",
+            eyebrow: "购物帮助",
+            title: "关于配送、包装和售后，你可以先在这里确认。",
             description:
-              "你可以继续把发货时效、礼盒包装、售后边界和客服响应标准逐步写进 FAQ，信任感会提升得很明显。",
+              "常见问题页整理了付款、发货、包装、退换和订单查询说明，适合在下单前快速核对。",
             cta: "查看联系页面",
           },
         }
       : {
           faqs: [
             {
-              question: "Why dedicate homepage space to explanation-driven content?",
+              question: "What should I check before my first order?",
               answer:
-                "Because in cross-border gifting, trust rarely comes from catalog size alone. It comes from how clearly you frame curation, packaging, shipping and support expectations.",
+                "Review product size, material notes, shipping timing and return policy first. For gifts, also check packaging details and delivery expectations.",
             },
             {
-              question: "Does a no-payment MVP make the store feel unfinished?",
+              question: "Where can I follow my order after checkout?",
               answer:
-                "Not if the visual system, product storytelling and order request flow feel intentional. Users can understand a phased launch when the experience still feels polished.",
+                "After payment, use your order number and checkout email on the tracking page to review payment status, processing updates and shipment details.",
             },
             {
-              question: "What is the best next layer after this homepage upgrade?",
+              question: "How do I choose a safer gift for someone else?",
               answer:
-                "Brand-led imagery, seasonal landing pages, paid-social entry pages and payment integrations will all build naturally on top of this new front page structure.",
+                "Start with items that have clear sizing, easy styling and gift-friendly packaging, such as plush toys, simple jewelry or small desk pieces.",
             },
           ],
           care: {
-            eyebrow: "Experience note",
-            title: "Write FAQ like premium service guidance, not like a cold support archive.",
+            eyebrow: "Shopping help",
+            title: "Review shipping, packaging and support details before checkout.",
             description:
-              "Continue enriching shipping timing, packaging promise, support boundaries and post-order communication standards here, and the whole store will feel more trustworthy.",
+              "The FAQ gathers payment, shipping, packaging, return and tracking guidance so you can confirm the details before placing an order.",
             cta: "Visit contact page",
           },
         };

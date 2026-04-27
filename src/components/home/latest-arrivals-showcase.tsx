@@ -15,22 +15,22 @@ export function LatestArrivalsShowcase({ latest, locale }: { latest: Product[]; 
   const copy =
     locale === "zh"
       ? {
-          empty: "目前还没有新品数据，可以先把最近发布的商品标记为 isNew。",
+          empty: "新品正在整理中，稍后会带来更多适合送礼和自留的选择。",
           badge: "新品首发",
-          title: "把新品区做成“值得点进来”的活动窗口。",
+          title: "最新上架的礼物灵感，从这里先看。",
           description:
-            "新品不需要只是再摆一排卡片，它更适合承担活动页入口、礼品专题预告和社媒流量承接的角色。",
+            "挑选近期更新的毛绒、饰品与桌面小物，适合想要新鲜感、季节心意或临时礼物的人。",
           leadTime: "发货说明",
           price: "当前售价",
           primaryCta: "查看新品详情",
           secondaryCta: "进入全部商品",
         }
       : {
-          empty: "No new arrivals are published yet. Mark a few products with isNew to activate this showcase.",
+          empty: "New arrivals are being prepared. More gift-ready pieces will appear here soon.",
           badge: "New arrival focus",
-          title: "Make new arrivals feel like a campaign window, not just another row of cards.",
+          title: "Fresh gift ideas, just added to the shop.",
           description:
-            "The new-arrivals block should help with launches, gifting edits and paid-traffic landing moments, which is why it now has a stronger editorial lead item.",
+            "Browse recently added plush toys, jewelry, and desk gifts for seasonal moments, small surprises, and easy add-on picks.",
           leadTime: "Shipping note",
           price: "Current price",
           primaryCta: "View new arrival",
@@ -122,8 +122,8 @@ export function LatestArrivalsShowcase({ latest, locale }: { latest: Product[]; 
         {rest.length === 0 ? (
           <div className="rounded-[2rem] border border-[rgba(59,47,37,0.08)] bg-white/76 p-6 text-sm leading-8 text-[#6d6258] shadow-[0_26px_74px_-54px_rgba(24,18,14,0.46)]">
             {locale === "zh"
-              ? "当后台补充更多新品后，这里会自动形成“一个主推 + 两个辅助卡片”的新版结构。"
-              : "As more new products are published, this area will automatically form a lead-and-support editorial layout."}
+              ? "更多新品正在准备中，你也可以先浏览精选推荐或全部商品。"
+              : "More new products are on the way. You can also browse featured picks or the full shop."}
           </div>
         ) : null}
       </div>

@@ -17,6 +17,36 @@
 - 选购指南内容页
 - 基础到中期可用的 SEO 结构
 
+### 当前版本更新摘要
+
+当前仓库已经包含最近一轮上线改动：
+
+- 首次访问 IP 活动：
+  - 每个 IP 7 天内仅触发一次活动窗口
+  - 首页弹窗提示 10 分钟内完成下单有机会获得优惠
+  - 底部展示 10 分钟倒计时
+  - 支付页命中活动后展示 1 折卡、中奖动画和“仅此一次机会”提示
+  - 支付接口会在最终付款时校验 IP、活动窗口和使用状态
+- 后台活动管理：
+  - 设置页新增“重置所有 IP 活动有效期”按钮
+  - 对应接口为 `POST /api/admin/promotions/reset-ip-validity`
+- 首页商品区分：
+  - `Best Sellers` 优先展示后台标记的 `featured` 商品
+  - `New Arrivals` 优先展示 `isNew` 和最新商品
+  - 新品模块会排除已出现在热销模块里的商品，避免首页两块重复
+- SEO 增强：
+  - 新增 `/shop/new-arrivals` 新品页
+  - sitemap 使用更稳定的 `lastModified`
+  - 分类页、商品页和 Guide 页强化结构化数据与内链
+  - 新增 Google Shopping XML Feed：`/api/feed/google-shopping.xml`
+  - 搜索页采用 `noindex, follow`，避免低质量搜索结果入索引，同时保留链接发现能力
+- 前台文案生产化：
+  - 首页、商品页、分类页、指南、FAQ、联系页、政策页等前台可见文案已清理成正式商城口吻
+  - 移除了测试环境、开发说明、SEO 说明、内部运营说明等不适合顾客看到的表达
+- 数据库备份：
+  - 当前仓库带有一份 PostgreSQL 备份：`backups/mall_20260427_112613.dump`
+  - 该备份为 `pg_dump -F c` 生成的 custom format，可通过 `pg_restore` 恢复
+
 ---
 
 ## 1. 项目概览
@@ -58,8 +88,9 @@
   - 尚未接入真实 Stripe / PayPal SDK
 - 下单后订单状态会进入 `AWAITING_PAYMENT`
 - 当前实际可用支付方式为 **credit card**
-  - 支付页保留 `card` / `paypal` 两种入口，但 `paypal` 目前是维护态，只展示提示，不会继续付款
+- 支付页保留 `card` / `paypal` 两种入口，但 `paypal` 目前是维护态，只展示提示，不会继续付款
 - 在支付页确认信用卡付款后，订单会更新为 `CONFIRMED`
+- 若订单命中 IP 首次访问活动，支付页会展示 1 折卡并按折后金额完成结算
 - 后台可以继续把订单更新为 `PROCESSING`、`SHIPPED` 等状态
 - 后台当前已接入**管理员邮箱 + 密码登录**
 - 默认公开后台入口为 **`/console/login`**
@@ -494,6 +525,55 @@ npm run db:repair-storefront
 
 把当前数据库中的种子商品 / 历史导入商品重新整理为当前 storefront 所需的展示结构，用于本地修复或数据回填。
 
+### 数据库备份与恢复
+
+当前仓库包含一份已导出的数据库备份：
+
+```text
+backups/mall_20260427_112613.dump
+```
+
+这是一份 PostgreSQL custom format 备份，生成方式为：
+
+```bash
+docker exec mall-postgres pg_dump \
+  -U mall \
+  -d mall \
+  -F c \
+  -f /tmp/mall_20260427_112613.dump
+
+docker cp mall-postgres:/tmp/mall_20260427_112613.dump \
+  backups/mall_20260427_112613.dump
+```
+
+建议优先恢复到新库检查：
+
+```bash
+docker cp backups/mall_20260427_112613.dump mall-postgres:/tmp/mall_20260427_112613.dump
+
+docker exec mall-postgres createdb -U mall mall_restore
+
+docker exec mall-postgres pg_restore \
+  -U mall \
+  -d mall_restore \
+  /tmp/mall_20260427_112613.dump
+```
+
+如确认需要覆盖当前 `mall` 数据库，可使用：
+
+```bash
+docker cp backups/mall_20260427_112613.dump mall-postgres:/tmp/mall_20260427_112613.dump
+
+docker exec mall-postgres pg_restore \
+  -U mall \
+  -d mall \
+  --clean \
+  --if-exists \
+  /tmp/mall_20260427_112613.dump
+```
+
+> 注意：数据库备份可能包含订单、邮箱、地址、管理员账号哈希、活动 IP 记录等敏感数据。仅建议提交到受控私有仓库，不建议放入公开仓库。
+
 ---
 
 ## 8. 推荐的首次启动流程
@@ -823,6 +903,30 @@ Content-Type: application/json
 5. 当前 `paypal` 为维护态，接口会返回维护提示；实际可完成付款的是 `card`
 6. 支付页调用 `POST /api/orders/pay`
 7. 信用卡付款成功后，系统把订单更新为 `CONFIRMED`
+
+### 12.1 IP 首次访问活动与 1 折卡
+
+活动逻辑如下：
+
+1. 用户首次从某个 IP 打开网站时，系统创建活动窗口
+2. 该 IP 会进入 7 天冷却期，冷却期内不会再次触发新的首次活动
+3. 前台弹窗提示用户 10 分钟内完成下单有机会获得优惠
+4. 页面底部展示 10 分钟活动倒计时
+5. 用户在活动窗口内创建订单并进入支付页时，系统发放 1 折卡
+6. 支付页展示中奖动画和“仅此一次机会”的提醒
+7. 若用户返回、离开付款页或取消订单，前台会提示该折扣机会视为自动放弃
+8. 最终付款接口会再次校验 IP、订单号、活动窗口、使用状态与折扣金额
+9. 支付成功后活动记录会标记为已使用
+
+关键文件：
+
+- `src/lib/ip-promotion.ts`
+- `src/app/api/promotion/window/route.ts`
+- `src/app/api/orders/pay/route.ts`
+- `src/components/promotion/ip-promotion-client.tsx`
+- `src/components/checkout/payment-experience.tsx`
+- `src/components/admin/promotion-reset-panel.tsx`
+- `src/app/api/admin/promotions/reset-ip-validity/route.ts`
 
 当前这套支付实现还附带两类运行期日志：
 

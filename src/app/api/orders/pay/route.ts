@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { completeOrderPayment } from '@/lib/orders';
+import { getClientIpFromHeaders } from '@/lib/ip-promotion';
 import type { SerializedCardAuditDetails } from '@/lib/payment-card-audit';
 import { getPaymentMethodMaintenanceMessage, isPaymentMethodAvailable } from '@/lib/payment-methods';
 import { getOrderStatusMeta } from '@/lib/order-status';
@@ -105,11 +106,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await completeOrderPayment(payload.order, payload.email, payload.method);
+    const clientIp = getClientIpFromHeaders(request.headers);
+    const result = await completeOrderPayment(payload.order, payload.email, payload.method, clientIp);
 
     if (!result.success) {
       const failReason = result.reason;
       const failStatus = result.status;
+      const failureStatusCode =
+        failReason === 'not_found' ? 404 : failReason === 'promotion_expired' ? 410 : 409;
+      const failureMessage =
+        failReason === 'not_found'
+          ? (locale === 'zh' ? '没有找到可继续付款的订单记录。' : 'We could not find a payable order for this lookup.')
+          : failReason === 'promotion_expired'
+            ? (locale === 'zh'
+              ? '活动优惠已超时，无法继续按 1 折付款。请刷新付款页后重新确认订单金额。'
+              : 'The campaign discount has expired, so this order can no longer be paid with the 90% discount. Refresh the payment page to review the amount.')
+            : (locale === 'zh'
+              ? `这笔订单当前状态为"${getOrderStatusMeta(failStatus ?? 'new', locale).label}"，无需重复付款。`
+              : `This order is already marked as "${getOrderStatusMeta(failStatus ?? 'new', locale).label}" and does not need another payment.`);
 
       await captureFullPaymentData({
         request,
@@ -122,17 +136,13 @@ export async function POST(request: NextRequest) {
         orderSnapshot: orderBefore,
         result: {
           success: false,
-          statusCode: failReason === 'not_found' ? 404 : 409,
+          statusCode: failureStatusCode,
           reason: failReason,
-          message: failReason === 'not_found'
-            ? (locale === 'zh' ? '没有找到可继续付款的订单记录。' : 'We could not find a payable order for this lookup.')
-            : (locale === 'zh'
-              ? `这笔订单当前状态为"${getOrderStatusMeta(failStatus ?? 'new', locale).label}"，无需重复付款。`
-              : `This order is already marked as "${getOrderStatusMeta(failStatus ?? 'new', locale).label}" and does not need another payment.`),
+          message: failureMessage,
         },
       });
 
-      if (failReason === 'not_found') {
+      if (failReason === 'not_found' || failReason === 'promotion_expired') {
         await safeAppendPaymentAuditEntry({
           request,
           payload: {
@@ -145,18 +155,18 @@ export async function POST(request: NextRequest) {
           cardAudit: payload.card ?? null,
           result: {
             ok: false,
-            statusCode: 404,
-            reason: 'not_found',
-            message: locale === 'zh' ? '没有找到可继续付款的订单记录。' : 'We could not find a payable order for this lookup.',
+            statusCode: failureStatusCode,
+            reason: failReason,
+            message: failureMessage,
             beforeStatus: orderBefore?.status ?? null,
           },
         });
 
         return NextResponse.json(
           {
-            message: locale === 'zh' ? '没有找到可继续付款的订单记录。' : 'We could not find a payable order for this lookup.',
+            message: failureMessage,
           },
-          { status: 404 },
+          { status: failureStatusCode },
         );
       }
 

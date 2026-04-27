@@ -27,7 +27,7 @@ const categoryMeta = {
     },
     footer: {
       en: "Small, polished pieces that instantly elevate the assortment",
-      zh: "用轻体量 SKU 快速拉高整体页面精致度",
+      zh: "轻巧精致，适合日常佩戴和送礼加购",
     },
     surface:
       "bg-[radial-gradient(circle_at_top_left,rgba(254,230,138,0.48),transparent_24%),linear-gradient(180deg,rgba(255,251,240,0.98)_0%,rgba(255,255,255,0.88)_100%)]",
@@ -40,7 +40,7 @@ const categoryMeta = {
     },
     footer: {
       en: "Useful for seasonal edits, bundles and curated add-on stories",
-      zh: "适合做节日专题、组合销售与加购模块",
+      zh: "适合节日心意、组合礼物与桌面点缀",
     },
     surface:
       "bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.48),transparent_26%),linear-gradient(180deg,rgba(243,248,255,0.98)_0%,rgba(255,255,255,0.88)_100%)]",

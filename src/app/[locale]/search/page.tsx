@@ -25,7 +25,7 @@ export async function generateMetadata({
     path: "/search",
     title: locale === "zh" ? "搜索商品" : "Search Products",
     description: locale === "zh" ? "按关键词查找商品。" : "Search the catalog by keyword.",
-    noIndex: true,
+    noIndexFollow: true,
   });
 }
 
@@ -68,8 +68,8 @@ export default async function SearchPage({
         title={dictionary.nav.search}
         description={
           locale === "zh"
-            ? "把搜索页也统一成首页这套粉白精品店风格：输入关键词后，结果页应该依然柔和、轻盈，而不是突然变成工具界面。"
-            : "The search page now follows the same soft boutique direction as the homepage, so product discovery still feels light, polished and gift-led instead of purely utilitarian."
+            ? "输入关键词查找毛绒玩具、饰品或桌面礼物，快速回到适合当前心意的商品。"
+            : "Search plush toys, jewelry or desk gifts by keyword and quickly return to pieces that fit the moment."
         }
         side={
           <div className="space-y-3 text-[#6b6470]">

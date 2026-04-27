@@ -42,8 +42,8 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
             <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#ff7e95]">Bag note</p>
             <p className="text-sm leading-7">
               {locale === "zh"
-                ? "购物车页也会延续首页这种柔和礼品店风格，让用户从浏览到下单都保持同一种体验。"
-                : "The cart keeps the same soft boutique presentation so the journey from discovery to checkout still feels visually consistent."}
+                ? "请在这里确认商品、数量与小计，准备好后即可继续填写收货信息并完成付款。"
+                : "Review your items, quantities and subtotal here, then continue to shipping details and payment when ready."}
             </p>
           </div>
         }

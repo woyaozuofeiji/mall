@@ -22,6 +22,10 @@ function uniqueProducts(list: Product[]) {
   return Array.from(map.values());
 }
 
+function excludeProductIds(list: Product[], ids: Set<string>) {
+  return list.filter((item) => !ids.has(item.id));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -55,11 +59,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   }
 
   const dictionary = getDictionary(locale);
-  const [{ featured, latest }, shop] = await Promise.all([getHomepageProducts(), getShopProducts({ sort: "featured" })]);
-  const allProducts = shop.products;
+  const [{ featured, latest }, featuredShop, newestShop] = await Promise.all([
+    getHomepageProducts({ featuredTake: 8, latestTake: 12 }),
+    getShopProducts({ sort: "featured" }),
+    getShopProducts({ sort: "newest" }),
+  ]);
 
-  const bestSellers = uniqueProducts([...featured, ...allProducts]).slice(0, 5);
-  const newArrivals = uniqueProducts([...latest, ...allProducts.filter((product) => !bestSellers.some((item) => item.id === product.id))]).slice(0, 5);
+  const bestSellers = uniqueProducts([
+    ...featured,
+    ...featuredShop.products.filter((product) => product.featured),
+    ...featuredShop.products.filter((product) => !product.isNew),
+    ...featuredShop.products,
+  ]).slice(0, 5);
+  const bestSellerIds = new Set(bestSellers.map((product) => product.id));
+  const newArrivals = excludeProductIds(uniqueProducts([...latest, ...newestShop.products]), bestSellerIds).slice(0, 5);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -103,7 +116,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         locale={locale}
         title={locale === "zh" ? "新品上架" : "New Arrivals"}
         viewAllLabel={dictionary.common.viewAll}
-        viewAllHref={`/${locale}/shop?sort=newest`}
+        viewAllHref={`/${locale}/shop/new-arrivals`}
         products={newArrivals}
         badge={locale === "zh" ? "新品" : "New"}
       />

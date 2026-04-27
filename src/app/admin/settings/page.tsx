@@ -1,12 +1,15 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { PromotionResetPanel } from "@/components/admin/promotion-reset-panel";
 import { requireAdminPage } from "@/lib/admin-auth";
 import { getAdminDictionary, resolveAdminLocale } from "@/lib/admin-i18n";
+import { getPromotionActivityStats } from "@/lib/ip-promotion";
 
 export default async function AdminSettingsPage({ searchParams }: { searchParams: Promise<{ locale?: string }> }) {
   const { locale: localeValue } = await searchParams;
   const locale = resolveAdminLocale(localeValue);
   const dictionary = getAdminDictionary(locale);
   const admin = await requireAdminPage({ locale, nextPath: "/admin/settings" });
+  const promotionStats = await getPromotionActivityStats();
 
   return (
     <AdminShell
@@ -26,6 +29,7 @@ export default async function AdminSettingsPage({ searchParams }: { searchParams
           <h2 className="font-serif text-3xl">{dictionary.settings.commerceSettings}</h2>
           <p className="mt-3 text-sm leading-7 text-white/70">{dictionary.settings.commerceSettingsDescription}</p>
         </div>
+        <PromotionResetPanel locale={locale} stats={promotionStats} />
       </div>
     </AdminShell>
   );

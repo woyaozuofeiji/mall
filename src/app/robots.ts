@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
       `/${locale}/cart`,
       `/${locale}/checkout`,
       `/${locale}/order-tracking`,
-      `/${locale}/search`,
     ]),
   ];
 

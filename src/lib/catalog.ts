@@ -203,6 +203,9 @@ function mapProduct(record: ProductWithRelations): Product {
     variants: record.variants.map((variant) => ({
       id: variant.id,
       label: localized(variant.labelEn, variant.labelZh),
+      sku: variant.sku ?? undefined,
+      price: toNumber(variant.price),
+      inventory: variant.inventory,
     })),
     specs: parseSpecs(record.attributes),
     reviewSummary: sourcePayload.reviewSummary?.rating && sourcePayload.reviewSummary?.count
@@ -273,6 +276,49 @@ export async function getCatalogCategories() {
     orderBy: { createdAt: "asc" },
   });
   return records.map(mapCategory);
+}
+
+export async function getCategorySitemapEntries() {
+  const records = await prisma.category.findMany({
+    select: {
+      slug: true,
+      updatedAt: true,
+      products: {
+        where: {
+          status: "PUBLISHED",
+        },
+        select: {
+          updatedAt: true,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return records.map((record) => ({
+    slug: record.slug,
+    updatedAt: record.products[0]?.updatedAt ?? record.updatedAt,
+  }));
+}
+
+export async function getCatalogLastModified() {
+  const [product, category] = await Promise.all([
+    prisma.product.findFirst({
+      where: { status: "PUBLISHED" },
+      select: { updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.category.findFirst({
+      select: { updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
+
+  return product?.updatedAt ?? category?.updatedAt ?? new Date("2026-04-21T00:00:00.000Z");
 }
 
 export async function getCategoryBySlug(slug: string) {

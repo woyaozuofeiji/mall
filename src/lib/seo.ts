@@ -55,6 +55,7 @@ export function buildPageMetadata(input: {
   path?: string;
   primaryImagePath?: string;
   noIndex?: boolean;
+  noIndexFollow?: boolean;
   keywords?: string[];
   images?: Array<string | undefined | null>;
   type?: "website" | "article";
@@ -75,13 +76,13 @@ export function buildPageMetadata(input: {
       canonical,
       languages: getLanguageAlternates(input.path),
     },
-    robots: input.noIndex
+    robots: input.noIndex || input.noIndexFollow
       ? {
           index: false,
-          follow: false,
+          follow: Boolean(input.noIndexFollow),
           googleBot: {
             index: false,
-            follow: false,
+            follow: Boolean(input.noIndexFollow),
             noimageindex: true,
           },
         }

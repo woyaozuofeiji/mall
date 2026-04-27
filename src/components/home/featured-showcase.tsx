@@ -33,7 +33,7 @@ export function FeaturedShowcase({ featured, locale }: { featured: Product[]; lo
           newLabel: "新品",
           editorPick: "主推商品",
           introLabel: "本期主推",
-          empty: "后台还没有标记精选商品，可以先在商品管理里设置 featured 内容。",
+          empty: "精选推荐正在整理中，稍后会带来更适合送礼和收藏的单品。",
           leadTime: "发货周期",
           variants: "可选规格",
           variantsUnit: "个",
@@ -41,14 +41,14 @@ export function FeaturedShowcase({ featured, locale }: { featured: Product[]; lo
           primaryCta: "进入商品页",
           secondaryCta: "查看全部商品",
           cardLabel: "精选系列",
-          curationPill: "首页策略",
-          curationTitle: "让“精选”真正变成首页结构，而不是一个普通标题。",
+          curationPill: "精选理由",
+          curationTitle: "每一件推荐，都围绕礼物质感与日常使用挑选。",
           curationDescription:
-            "这一版把精选区做成了“一个主角 + 若干配角”的节奏，视觉层级更明确，也更符合精品站首页应有的高级感。",
+            "我们优先挑选容易送出心意、适合陈列保存、并且服务信息清晰的商品，让浏览过程更省心。",
           metrics: [
-            { label: "主推逻辑", value: "1 个核心单品" },
-            { label: "辅助陈列", value: "其余精选补位" },
-            { label: "视觉目的", value: "更像品牌橱窗" },
+            { label: "送礼场景", value: "生日 / 感谢" },
+            { label: "挑选标准", value: "精致耐看" },
+            { label: "服务信息", value: "清晰可查" },
           ],
         }
       : {
@@ -56,7 +56,7 @@ export function FeaturedShowcase({ featured, locale }: { featured: Product[]; lo
           newLabel: "New",
           editorPick: "Signature merchandise",
           introLabel: "Featured focus",
-          empty: "No featured products are published yet. Mark a few products as featured in admin to unlock this section.",
+          empty: "Featured picks are being curated. More gift-ready pieces will appear here soon.",
           leadTime: "Lead time",
           variants: "Variants",
           variantsUnit: "options",
@@ -64,14 +64,14 @@ export function FeaturedShowcase({ featured, locale }: { featured: Product[]; lo
           primaryCta: "Open product page",
           secondaryCta: "Browse full shop",
           cardLabel: "Featured edit",
-          curationPill: "Homepage logic",
-          curationTitle: "Turn “featured” into a real homepage composition, not just a heading above cards.",
+          curationPill: "Why these picks",
+          curationTitle: "Each featured item is chosen for gifting appeal and everyday use.",
           curationDescription:
-            "The section now follows a clearer editorial hierarchy: one hero item leads, while supporting products reinforce the mood and improve the premium storefront feel.",
+            "We prioritize pieces that feel thoughtful, display beautifully, and come with clear service information before checkout.",
           metrics: [
-            { label: "Lead item", value: "1 signature SKU" },
-            { label: "Support layer", value: "Selected companions" },
-            { label: "Visual goal", value: "Boutique display" },
+            { label: "Gift moments", value: "Birthday / thanks" },
+            { label: "Selection lens", value: "Refined pieces" },
+            { label: "Service details", value: "Clear to review" },
           ],
         };
 

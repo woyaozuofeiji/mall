@@ -21,9 +21,9 @@ const contactCards = {
       icon: Clock3,
     },
     {
-      title: 'Supplier coordination',
+      title: 'Partnership inquiries',
       detail: 'operations@northstaratelier.com',
-      description: 'Use this contact for vendor review, stock coordination and fulfillment follow-up.',
+      description: 'For brand, vendor or fulfillment partnership questions, reach the operations team here.',
       icon: PackageSearch,
     },
   ],
@@ -41,9 +41,9 @@ const contactCards = {
       icon: Clock3,
     },
     {
-      title: '供应链协同',
+      title: '合作咨询',
       detail: 'operations@northstaratelier.com',
-      description: '供应商对接、库存协同和履约确认可统一通过该入口处理。',
+      description: '品牌合作、供应商沟通与履约相关咨询，可通过该邮箱联系。',
       icon: PackageSearch,
     },
   ],
@@ -65,8 +65,8 @@ export async function generateMetadata({
     title: locale === "zh" ? "联系我们与客户支持" : "Contact & Customer Support",
     description:
       locale === "zh"
-        ? "联系客户支持与供应链协同入口，处理订单、配送、退换与商品咨询。"
-        : "Reach customer care and operations contacts for order, shipping, return and product questions.",
+        ? "联系客户支持，处理订单、配送、退换、商品细节与合作咨询。"
+        : "Reach customer care for order, shipping, return, product and partnership questions.",
     keywords:
       locale === "zh"
         ? ["联系我们", "客户支持", "订单咨询", "配送问题"]
@@ -94,8 +94,8 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
             </p>
             <p className='text-sm leading-7'>
               {locale === 'zh'
-                ? '如果需要咨询订单、配送、退换、商品细节或供应链协同，可以从这里快速找到对应联系入口。'
-                : 'Use these contact routes for order questions, shipping follow-up, return handling, product inquiries or supplier coordination.'}
+                ? '如果需要咨询订单、配送、退换、商品细节或合作事项，可以从这里快速找到对应联系入口。'
+                : 'Use these contact channels for order questions, shipping follow-up, return handling, product inquiries or partnership requests.'}
             </p>
           </div>
         }

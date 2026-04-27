@@ -19,8 +19,8 @@ export function HomeReferenceGuides({ locale }: { locale: Locale }) {
           </h2>
           <p className="mt-4 text-sm leading-8 text-[#6d6670]">
             {locale === "zh"
-              ? "通过内容页补充送礼场景、商品选择和包装运输建议，让用户在浏览商品之外还能获得更具体的购买参考。"
-              : "Guide content adds practical buying advice around gifting, product selection and shipping expectations so shoppers can make decisions beyond browsing product cards alone."}
+              ? "这些指南围绕送礼场景、材质选择、包装与配送准备，帮助你在下单前更清楚地判断哪件商品更合适。"
+              : "These guides cover gifting moments, material choices, packaging, and delivery planning so you can choose with more confidence before checkout."}
           </p>
         </div>
 
@@ -55,4 +55,3 @@ export function HomeReferenceGuides({ locale }: { locale: Locale }) {
     </section>
   );
 }
-

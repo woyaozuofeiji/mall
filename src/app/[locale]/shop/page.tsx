@@ -70,6 +70,10 @@ export default async function ShopPage({
     redirect(`/${locale}/shop/category/${category}`);
   }
 
+  if (getSingleValue(query.sort) === "newest") {
+    redirect(`/${locale}/shop/new-arrivals`);
+  }
+
   if (getSingleValue(query.sort) || getSingleValue(query.page)) {
     redirect(`/${locale}/shop`);
   }
@@ -81,13 +85,13 @@ export default async function ShopPage({
     locale === "zh"
       ? {
           introEyebrow: "选购入口",
-          introTitle: "从这里进入你真正想逛的分类",
+          introTitle: "先选择你想逛的商品方向",
           introDescription:
-            "这个页面不再承担完整商品展示，而是作为总导航入口：先进入分类、再搜索关键词，或继续查看指南、售后与订单服务。",
+            "从毛绒玩具、饰品首饰和桌面礼物开始浏览，也可以直接搜索关键词，快速找到适合送礼或自留的商品。",
           categoryEyebrow: "分类导航",
           categoryTitle: "先选方向，再开始浏览商品",
           categoryDescription:
-            "如果你已经知道自己更偏向毛绒、饰品还是送礼类商品，直接进入对应分类页会比先看混合商品列表更高效。",
+            "如果你已经知道偏好的风格，直接进入对应分类会更快；每个分类都围绕送礼、陈列和日常使用场景整理。",
           categoryCta: "进入分类",
           searchEyebrow: "快速搜索",
           searchTitle: "如果你已经知道关键词，直接搜索更快",
@@ -95,24 +99,24 @@ export default async function ShopPage({
           searchSubmit: "搜索商品",
           serviceEyebrow: "购物服务",
           serviceTitle: "浏览前如果还想确认服务信息，可以从这里继续",
-          serviceDescription: "把购物相关服务统一放在这里，避免 /shop 再重复承担首页和分类页已经提供的商品展示任务。",
+          serviceDescription: "下单前可以先查看配送、售后和常见问题，确认服务细节后再继续选购。",
           serviceLinks: [
             { label: "选购指南", href: `/${locale}/guides`, description: "先看送礼、材质和搭配建议" },
             { label: "常见问题", href: `/${locale}/faq`, description: "查看支付、配送与售后说明" },
             { label: "订单查询", href: `/${locale}/order-tracking`, description: "已下单用户可在这里查状态" },
             { label: "发货政策", href: `/${locale}/policies/shipping`, description: "提前确认配送与时效规则" },
           ],
-          bottomNote: "商品详情页与分类页已经承担真正的商品浏览任务，这里只保留分流与服务入口。",
+          bottomNote: "继续从分类、搜索或指南进入，找到更适合当前心意的商品。",
         }
       : {
           introEyebrow: "Shop directory",
-          introTitle: "Start with the collection you actually want to browse",
+          introTitle: "Choose the direction you want to browse first",
           introDescription:
-            "This page no longer carries the full catalog. It now works as a clean directory for category entry, keyword search, guides, and order-related services.",
+            "Start with plush toys, jewelry, or desk gifts, or search directly by keyword to find something for gifting or keeping.",
           categoryEyebrow: "Collection navigation",
           categoryTitle: "Pick a direction before opening product lists",
           categoryDescription:
-            "If you already know whether you want plush, jewelry or gift-oriented products, entering the matching category page is faster than browsing a mixed grid first.",
+            "If you already know the style you prefer, opening the matching collection is faster. Each collection is organized around gifting, display, and everyday use.",
           categoryCta: "Open collection",
           searchEyebrow: "Quick search",
           searchTitle: "If you already know the keyword, search directly",
@@ -121,14 +125,14 @@ export default async function ShopPage({
           serviceEyebrow: "Shopping services",
           serviceTitle: "Need service information before browsing? Continue from here",
           serviceDescription:
-            "This keeps shopping support in one place so /shop no longer repeats the homepage and category pages with another full product display.",
+            "Review shipping, returns, and common questions before you choose, then continue shopping with the details already clear.",
           serviceLinks: [
             { label: "Buying guides", href: `/${locale}/guides`, description: "Read gifting, material and pairing guidance first" },
             { label: "FAQ", href: `/${locale}/faq`, description: "Check payment, shipping and support details" },
             { label: "Track order", href: `/${locale}/order-tracking`, description: "Look up order status after purchase" },
             { label: "Shipping policy", href: `/${locale}/policies/shipping`, description: "Review delivery timing and fulfillment notes" },
           ],
-          bottomNote: "Category pages and product detail pages now handle the real browsing flow. This route stays focused on routing and support.",
+          bottomNote: "Continue through collections, search, or guides to find the product that fits the occasion.",
         };
 
   return (

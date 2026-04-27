@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma, type OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
+import { getOrderPromotionDiscount } from "@/lib/ip-promotion";
 import type { PaymentMethod } from "@/lib/payment-methods";
 import type { Locale } from "@/lib/types";
 import type { CheckoutPayload } from "@/lib/validation/checkout";
@@ -24,6 +25,7 @@ export interface OrderLookupResult {
   note: string | null;
   subtotal: number;
   totalAmount: number;
+  promotionDiscount: ReturnType<typeof getOrderPromotionDiscount>;
   createdAt: string;
   trackingNumber: string | null;
   carrier: string | null;
@@ -165,9 +167,10 @@ export async function completeOrderPayment(
   orderNumber: string,
   email: string,
   method: OrderPaymentMethod,
+  clientIp?: string,
 ): Promise<
   | { success: true; orderNumber: string; email: string; status: 'confirmed'; paymentMethod: OrderPaymentMethod; paidAt: string }
-  | { success: false; reason: 'not_found' | 'not_payable'; status?: Lowercase<OrderStatus> }
+  | { success: false; reason: 'not_found' | 'not_payable' | 'promotion_expired'; status?: Lowercase<OrderStatus> }
 > {
   const order = await prisma.order.findFirst({
     where: {
@@ -198,20 +201,70 @@ export async function completeOrderPayment(
     order.metadata && typeof order.metadata === 'object' && !Array.isArray(order.metadata)
       ? (order.metadata as Prisma.JsonObject)
       : ({} as Prisma.JsonObject);
+  const promotionDiscount = getOrderPromotionDiscount(order.metadata);
   const paidAt = new Date().toISOString();
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      status: 'CONFIRMED',
-      metadata: {
-        ...existingMetadata,
-        paymentStatus: 'paid',
-        paymentMethod: method,
-        paidAt,
-      } as Prisma.InputJsonValue,
-    },
-  });
+  if (promotionDiscount) {
+    if (!clientIp) {
+      return { success: false, reason: 'promotion_expired' };
+    }
+
+    const now = new Date();
+    const applied = await prisma.$transaction(async (tx) => {
+      const activity = await tx.ipPromotionActivity.findFirst({
+        where: {
+          ipAddress: clientIp,
+          orderNumber: order.orderNumber,
+          usedAt: null,
+        },
+        select: {
+          id: true,
+          offerExpiresAt: true,
+        },
+      });
+
+      if (!activity || activity.offerExpiresAt.getTime() <= now.getTime()) {
+        return false;
+      }
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: 'CONFIRMED',
+          metadata: {
+            ...existingMetadata,
+            paymentStatus: 'paid',
+            paymentMethod: method,
+            paidAt,
+          } as Prisma.InputJsonValue,
+        },
+      });
+
+      await tx.ipPromotionActivity.update({
+        where: { id: activity.id },
+        data: { usedAt: now },
+      });
+
+      return true;
+    });
+
+    if (!applied) {
+      return { success: false, reason: 'promotion_expired' };
+    }
+  } else {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        status: 'CONFIRMED',
+        metadata: {
+          ...existingMetadata,
+          paymentStatus: 'paid',
+          paymentMethod: method,
+          paidAt,
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
 
   return {
     success: true,
@@ -258,6 +311,7 @@ export async function findOrderByLookup(orderNumber: string, email: string): Pro
     note: result.note,
     subtotal: Number(result.subtotal),
     totalAmount: Number(result.totalAmount ?? result.subtotal),
+    promotionDiscount: getOrderPromotionDiscount(result.metadata),
     createdAt: result.createdAt.toISOString(),
     trackingNumber: result.trackingNumber,
     carrier: result.carrier,
